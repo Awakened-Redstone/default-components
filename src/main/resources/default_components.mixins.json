@@ -1,0 +1,17 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.awakenedredstone.defaultcomponents.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "DataComponentTypesMixin",
+    "ItemMixin",
+    "RegistryMixin",
+    "config.JanksonAcessor",
+    "config.POJODeserializerAccessor",
+    "config.POJODeserializerMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
