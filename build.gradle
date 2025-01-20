@@ -1,5 +1,6 @@
 plugins {
-    id 'fabric-loom' version '1.7-SNAPSHOT'
+    id "me.modmuss50.mod-publish-plugin" version "0.7.4"
+    id 'fabric-loom' version '1.9-SNAPSHOT'
     id 'maven-publish'
 }
 
@@ -21,11 +22,9 @@ loom {
 }
 
 repositories {
-    // Add repositories to retrieve artifacts from in here.
-    // You should only use this when depending on other mods because
-    // Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
-    // See https://docs.gradle.org/current/userguide/declaring_repositories.html
-    // for more information about repositories.
+    maven {
+        url "https://maven.nucleoid.xyz"
+    }
 }
 
 dependencies {
@@ -36,6 +35,7 @@ dependencies {
 
     // Fabric API. This is technically optional, but you probably want it anyway.
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+    modImplementation include("xyz.nucleoid:packet-tweaker:${project.packet_tweaker}")
 
     include api("blue.endless:jankson:${property("jankson_version")}")
 }
@@ -97,5 +97,65 @@ publishing {
         // Notice: This block does NOT have the same function as the block in the top level.
         // The repositories here will be used for publishing your artifact, not for
         // retrieving dependencies.
+    }
+}
+
+String CHANGELOG = new File("CHANGELOG.md").exists() ? file("CHANGELOG.md").text : "No changelog provided"
+
+String projectVersion = project.version.toString()
+List<String> projectVersionNumber = projectVersion.split("-", 2)
+String projectVersionName = "Release ${projectVersionNumber[0]}"
+if (projectVersion.contains("beta")) {
+    List<String> projectBeta = projectVersionNumber[1].split("\\.", 2)
+    projectVersionName = "${projectVersionNumber[0]} - Beta ${projectBeta[1]}"
+    versionType = "beta"
+} else if (projectVersion.contains("alpha")) {
+    List<String> projectAlpha = projectVersionNumber[1].split("\\.", 2)
+    projectVersionName = "${projectVersionNumber[0]} - Alpha ${projectAlpha[1]}"
+    versionType = "alpha"
+} else if (projectVersion.contains("rc")) {
+    List<String> projectRC = projectVersionNumber[1].split("\\.", 2)
+    projectVersionName = "${projectVersionNumber[0]} - Release Candidate ${projectRC[1]}"
+    versionType = "beta"
+}
+
+publishMods {
+    file = remapJar.archiveFile
+    changelog = CHANGELOG
+    type = STABLE
+    modLoaders.add("fabric")
+    displayName = projectVersionName
+
+    curseforge {
+        setDisplayName(projectVersionName)
+        projectId = "1099230"
+        projectSlug = "default-components" // Required for discord webhook
+        accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
+        minecraftVersions.add(property("minecraft_version"))
+        requires("fabric-api")
+    }
+    modrinth {
+        setDisplayName(projectVersionName)
+        projectId = "ReIHZWEq"
+        accessToken = providers.environmentVariable("MODRINTH_TOKEN")
+        minecraftVersions.add(property("minecraft_version"))
+        requires("fabric-api")
+    }
+    /*github {
+        repository = "test/example"
+        accessToken = providers.environmentVariable("GITHUB_TOKEN")
+        commitish = "main"
+    }*/
+    discord {
+        content = """
+<@&1282869980496396298> <@&1282869891967225948>
+# Default Components | ${projectVersionName}
+
+${CHANGELOG}
+"""
+        avatarUrl = "https://cdn.discordapp.com/avatars/1268055578073108574/73106a33f497ea5f2c676bcfb4816917.webp"
+        username = "Mod updates"
+        webhookUrl = providers.environmentVariable("DISCORD_WEBHOOK")
+        dryRunWebhookUrl = providers.environmentVariable("DRY_WEBHOOK")
     }
 }

@@ -4,12 +4,13 @@
   "package": "com.awakenedredstone.defaultcomponents.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "DataComponentTypesMixin",
     "ItemMixin",
-    "RegistryMixin",
-    "config.JanksonAcessor",
-    "config.POJODeserializerAccessor",
-    "config.POJODeserializerMixin"
+    "ItemStackMixin",
+    "ItemStackMixin$PacketCodec",
+    "MergedComponentMapAccessor",
+    "MergedComponentMapMixin",
+    "ServerCommonNetworkHandlerAccessor",
+    "ServerPlayNetworkAddonAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -1,28 +1,20 @@
 A simple mod that allows you to configure default components for items
 
-You can configure default components for all items (named `global` on the config) and per item (named `perItem` on the config)
+Add and remove data components from all or selected items with a simple datapack, fully serverside,
+with client code to provide a better and smoother experience to the players
 
-Currently the configs on the server and client should match for better experience, and any change to the config requires a restart
+The mod modifies packets to vanilla clients to provide the best experience.
+Having the mod on the client is recommended as it can avoid jank caused by ping, server lag and the creative inventory being handled by the client
 
-The mod is currently on beta and the config may change in the future
+Create great customized modpacks with modified default components for the items   
+Allows to make any item food, a tool, and everything else components allow you to do.
 
-An example of a config file:
-```json5 default_components.json5
-{
-    // Components that will apply to all items [REQUIRES RESTART]
-    "global": {
-        "minecraft:food": {
-            saturation: 1,
-            nutrition: 1
-        },
-        "lore": ['""', '"\\u00a77This is a default component"']
-    },
-    // Components that will apply to specific items [REQUIRES RESTART]
-    "perItem": {
-        "minecraft:piston": {
-            "lore": ['""', '"\\u00a77This is another component"']
-        }
-    }
-}
+This mod supports both vanilla and modded components and also works with modded items
 
-```
+[You can find the documentation here](https://docs.awakenedredstone.com/minecraft/default_components/introduction/). The documentation and simple and straight to the point, with tutorial for creating a datapack and how to setup the mod.
+
+<!--a href="https://bisecthosting.com/Redstone?r=default_components" target="_blank">
+  <div>
+    <img src="https://www.bisecthosting.com/partners/custom-banners/acf5ce83-7faa-4bf7-ac60-1adc12f4fadd.png"/>
+  </div>
+</a-->
