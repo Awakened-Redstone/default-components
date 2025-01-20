@@ -1,5 +1,5 @@
 plugins {
-    id "me.modmuss50.mod-publish-plugin" version "0.7.4"
+    id "me.modmuss50.mod-publish-plugin" version "0.8.4"
     id 'fabric-loom' version '1.9-SNAPSHOT'
     id 'maven-publish'
 }
@@ -42,8 +42,6 @@ dependencies {
 
 processResources {
     inputs.property "version", project.version
-    inputs.property "minecraft_version", project.minecraft_version
-    inputs.property "loader_version", project.loader_version
     filteringCharset "UTF-8"
 
     filesMatching("fabric.mod.json") {
@@ -130,32 +128,37 @@ publishMods {
         setDisplayName(projectVersionName)
         projectId = "1099230"
         projectSlug = "default-components" // Required for discord webhook
-        accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
+        accessToken = providers.gradleProperty("CURSEFORGE_TOKEN")
         minecraftVersions.add(property("minecraft_version"))
         requires("fabric-api")
     }
     modrinth {
         setDisplayName(projectVersionName)
         projectId = "ReIHZWEq"
-        accessToken = providers.environmentVariable("MODRINTH_TOKEN")
+        accessToken = providers.gradleProperty("MODRINTH_TOKEN")
         minecraftVersions.add(property("minecraft_version"))
         requires("fabric-api")
     }
     /*github {
         repository = "test/example"
-        accessToken = providers.environmentVariable("GITHUB_TOKEN")
+        accessToken = providers.gradleProperty("GITHUB_TOKEN")
         commitish = "main"
     }*/
     discord {
         content = """
-<@&1282869980496396298> <@&1282869891967225948>
 # Default Components | ${projectVersionName}
 
-${CHANGELOG}
-"""
+${CHANGELOG}"""
+
         avatarUrl = "https://cdn.discordapp.com/avatars/1268055578073108574/73106a33f497ea5f2c676bcfb4816917.webp"
         username = "Mod updates"
-        webhookUrl = providers.environmentVariable("DISCORD_WEBHOOK")
-        dryRunWebhookUrl = providers.environmentVariable("DRY_WEBHOOK")
+        webhookUrl = providers.gradleProperty("DISCORD_WEBHOOK")
+        dryRunWebhookUrl = providers.gradleProperty("DRY_WEBHOOK")
+        style {
+            look = "MODERN"
+            link = "BUTTON"
+            thumbnailUrl = "https://cdn.modrinth.com/data/ReIHZWEq/0b2ec313e6bfa7b400b1a956a8d4930403049d3b_96.webp"
+            color = "modrinth"
+        }
     }
 }

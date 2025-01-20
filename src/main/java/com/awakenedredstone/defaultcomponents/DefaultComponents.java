@@ -52,7 +52,7 @@ public class DefaultComponents implements ModInitializer {
                     ServerPlayNetworking.send(player, DefaultComponentLoader.createSyncPayload());
                 }
             } catch (Throwable e) {
-                LOGGER.error("WHAT IN THE WORLD", e);
+                LOGGER.error("Failed to update default components", e);
             }
         });
 
@@ -62,7 +62,6 @@ public class DefaultComponents implements ModInitializer {
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> sender.sendPacket(DefaultComponentLoader.createSyncPayload()));
 
         ServerPlayNetworking.registerGlobalReceiver(DefaultComponentsPresentPayload.ID, (payload, context) -> {
-            LOGGER.info("Modded Player {} joined", context.player().getName().getString());
             MODDED_PLAYERS.add(context.player().getGameProfile());
         });
 

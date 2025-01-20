@@ -73,12 +73,21 @@ public class DefaultComponentLoader extends JsonDataLoader<DefaultComponentLoade
     }
 
     void modifyItems() {
-        itemComponents.forEach((identifier, componentManipulation) -> {
-            Item item = Registries.ITEM.get(identifier);
-            if (item instanceof ModifyDefaultComponents modifiable) {
-                modifiable.defaultComponents$modifyComponents(getItemComponents().get(identifier));
+        if (!globalComponents.equals(ComponentManipulation.EMPTY)) {
+            for (Item item : Registries.ITEM) {
+                if (item instanceof ModifyDefaultComponents modifiable) {
+                    Identifier id = Registries.ITEM.getId(item);
+                    modifiable.defaultComponents$modifyComponents(getItemComponents().get(id));
+                }
             }
-        });
+        } else {
+            itemComponents.forEach((identifier, componentManipulation) -> {
+                Item item = Registries.ITEM.get(identifier);
+                if (item instanceof ModifyDefaultComponents modifiable) {
+                    modifiable.defaultComponents$modifyComponents(getItemComponents().get(identifier));
+                }
+            });
+        }
     }
 
     public static SyncPayload createSyncPayload() {
