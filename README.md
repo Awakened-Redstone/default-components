@@ -1,16 +1,21 @@
 Add and remove data components from all or selected items with a simple datapack, fully serverside,
 with optional client code to provide a better and smoother experience to the players
 
+---
+
 ### ⚙️ Features
-- Reload **on the fly**, with immediate updates on clients with the mod and vanilla clients when a new packet is received
+- Reload **on the fly**, with fast and immediate updates
 - Fully **data driven**, using simple datapacks
-- **Server side**, compatible with vanilla clients, and with an optional client mod for a smoother experience
+- **Fully server side**, compatible with vanilla clients
 - Support for **modded items**
 - Support for **modded components**
-- Dedicated and detailed documentation
-- Optional client mod, allowing to have the custom components on GUI mods like [REI](https://modrinth.com/mod/rei) and the creative inventory
+- Dedicated and detailed **documentation**
+- **Optional** on the client
+- Presence on the client allows to have the custom components on GUI mods like [REI](https://modrinth.com/mod/rei) and the creative inventory
 
-[You can find a detailed documentation here](https://docs.awakenedredstone.com/minecraft/default_components/introduction/)
+[![You can find a detailed documentation here](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/documentation/generic_vector.svg)](https://docs.awakenedredstone.com/minecraft/default_components/introduction/)
+
+---
 
 Create great customized modpacks with modified default components for the items   
 Allows to make any item food, a tool, and everything else components allow you to do.  
