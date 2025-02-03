@@ -4,7 +4,7 @@
   "version": "${version}",
 
   "name": "Default Components",
-  "description": "A set of tools for servers and clients to help players on building redstone contraptions",
+  "description": "Change the default components of any item in the game",
   "authors": [],
   "contact": {},
 
