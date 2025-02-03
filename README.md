@@ -11,7 +11,9 @@ with optional client code to provide a better and smoother experience to the pla
 - Support for **modded components**
 - Dedicated and detailed **documentation**
 - **Optional** on the client
-- Presence on the client allows to have the custom components on GUI mods like [REI](https://modrinth.com/mod/rei) and the creative inventory
+- Great for
+  - **modpacks**, the client support provides extended mod support, like showing on [REI](https://modrinth.com/mod/rei)
+  - **server-side** modding with the vanilla compatibility
 
 [![You can find a detailed documentation here](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/documentation/generic_vector.svg)](https://docs.awakenedredstone.com/minecraft/default_components/introduction/)
 
