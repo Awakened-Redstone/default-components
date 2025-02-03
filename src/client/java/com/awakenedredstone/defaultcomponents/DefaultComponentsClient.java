@@ -31,23 +31,6 @@ public class DefaultComponentsClient implements ClientModInitializer {
             sender.sendPacket(DefaultComponentsPresentPayload.INSTANCE);
         });
 
-        if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
-            ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> {
-                dispatcher.register(
-                  ClientCommandManager.literal("client_default_components")
-                    .executes(context -> {
-                        FabricClientCommandSource source = context.getSource();
-                        if (source.getPlayer().getMainHandStack().isEmpty()) return 0;
-
-                        ComponentMap baseComponents = ((MergedComponentMapAccessor) source.getPlayer().getMainHandStack().getComponents()).getBaseComponents();
-                        NbtElement nbt = ComponentMap.CODEC.encodeStart(NbtOps.INSTANCE, baseComponents).getOrThrow();
-
-                        source.sendFeedback(NbtHelper.toPrettyPrintedText(nbt));
-
-                        return baseComponents.size();
-                    })
-                );
-            });
-        }
+        //TODO: better development/debug tools, the command was too volatile
     }
 }

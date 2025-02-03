@@ -65,24 +65,7 @@ public class DefaultComponents implements ModInitializer {
             MODDED_PLAYERS.add(context.player().getGameProfile());
         });
 
-        if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
-            CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
-                dispatcher.register(
-                  CommandManager.literal("default_components")
-                    .executes(context -> {
-                        ServerCommandSource source = context.getSource();
-                        if (!source.isExecutedByPlayer() || source.getPlayer().getMainHandStack().isEmpty()) return 0;
-
-                        ComponentMap baseComponents = ((MergedComponentMapAccessor) source.getPlayer().getMainHandStack().getComponents()).getBaseComponents();
-                        NbtElement nbt = ComponentMap.CODEC.encodeStart(NbtOps.INSTANCE, baseComponents).getOrThrow();
-
-                        source.sendFeedback(() -> NbtHelper.toPrettyPrintedText(nbt),false);
-
-                        return baseComponents.size();
-                    })
-                );
-            });
-        }
+        //TODO: better development/debug tools, the command was too volatile
     }
 
     public static Identifier id(String path) {
