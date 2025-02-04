@@ -157,7 +157,7 @@ ${CHANGELOG}"""
         style {
             look = "MODERN"
             link = "BUTTON"
-            thumbnailUrl = "https://cdn.modrinth.com/data/ReIHZWEq/0b2ec313e6bfa7b400b1a956a8d4930403049d3b_96.webp"
+            thumbnailUrl = "https://cdn.modrinth.com/data/ReIHZWEq/f2e488e2f54f0e0605ea45d7208ca9311db050a6.png"
             color = "modrinth"
         }
     }
