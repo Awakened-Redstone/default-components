@@ -148,7 +148,7 @@ tasks.getByName("publishMods").doFirst(checks)
 publishMods {
     file = (tasks.getByName("remapJar") as AbstractArchiveTask).archiveFile
     changelog = CHANGELOG
-    type = STABLE
+    type = projectVersionType
     modLoaders.add("fabric")
     displayName = "[$minecraftVersion] $projectVersionName"
 
