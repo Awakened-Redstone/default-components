@@ -8,8 +8,8 @@ import java.util.Map;
 
 public class ComponentSync {
     public static void sync(SyncPayload payload) {
-        DefaultComponentLoader loader = DefaultComponentLoader.INSTANCE;
-        loader.globalComponents = payload.globalComponents();
+        DefaultComponentData loader = DefaultComponentData.INSTANCE;
+        loader.modComponents = payload.globalComponents();
         loader.itemComponents = payload.itemComponents();
         loader.modifyItems();
         synchronized (DefaultComponents.ITEM_STACKS) {
@@ -18,8 +18,8 @@ public class ComponentSync {
     }
 
     public static void unload() {
-        DefaultComponentLoader loader = DefaultComponentLoader.INSTANCE;
-        loader.globalComponents = DefaultComponentLoader.ComponentManipulation.EMPTY;
+        DefaultComponentData loader = DefaultComponentData.INSTANCE;
+        loader.modComponents = Map.of();
         loader.itemComponents = Map.of();
         loader.modifyItems();
     }

@@ -10,7 +10,8 @@
     "MergedComponentMapAccessor",
     "MergedComponentMapMixin",
     "ServerCommonNetworkHandlerAccessor",
-    "ServerPlayNetworkAddonAccessor"
+    "ServerPlayNetworkAddonAccessor",
+    "TagEntryAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

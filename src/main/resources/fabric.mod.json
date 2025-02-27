@@ -21,6 +21,7 @@
     ]
   },
 
+  "accessWidener": "default_components.accesswidener",
   "mixins": [
     "default_components.mixins.json"
   ],
@@ -28,6 +29,6 @@
   "depends": {
     "fabricloader": "*",
     "fabric-api": "*",
-    "minecraft": ">=1.21.4"
+    "minecraft": "${minecraft}"
   }
 }

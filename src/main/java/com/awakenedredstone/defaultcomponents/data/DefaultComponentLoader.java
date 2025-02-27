@@ -1,11 +1,12 @@
 package com.awakenedredstone.defaultcomponents.data;
 
-import com.awakenedredstone.defaultcomponents.duck.ModifyDefaultComponents;
-import com.awakenedredstone.defaultcomponents.network.SyncPayload;
+import com.awakenedredstone.defaultcomponents.mixin.TagEntryAccessor;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
+import com.mojang.datafixers.util.Either;
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
 import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
@@ -13,11 +14,16 @@ import net.minecraft.component.ComponentType;
 import net.minecraft.item.Item;
 import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.registry.Registries;
+import net.minecraft.registry.*;
+import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.registry.entry.RegistryEntryList;
+import net.minecraft.registry.tag.TagEntry;
+import net.minecraft.registry.tag.TagKey;
 import net.minecraft.resource.JsonDataLoader;
 import net.minecraft.resource.ResourceFinder;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.InvalidIdentifierException;
 import net.minecraft.util.profiler.Profiler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,23 +32,23 @@ import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-public class DefaultComponentLoader extends JsonDataLoader<DefaultComponentLoader.ComponentManipulation> implements IdentifiableResourceReloadListener {
+public class DefaultComponentLoader extends /*? if >=1.21.2 {*/JsonDataLoader<DefaultComponentLoader.ComponentManipulation>/*?} else {*//*JsonDataLoader*//*?}*/ implements IdentifiableResourceReloadListener {
     public static final Logger LOGGER = LoggerFactory.getLogger("Default Components Data Parser");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
-    public static final DefaultComponentLoader INSTANCE = new DefaultComponentLoader();
-    ComponentManipulation globalComponents = ComponentManipulation.EMPTY;
-    Map<Identifier, ComponentManipulation> itemComponents = Map.of();
+    /*? if <1.21.2 {*/
+    /*private final RegistryOps<JsonElement> ops;*/
+    /*?}*/
 
-    protected DefaultComponentLoader() {
-        super(ComponentManipulation.CODEC, ResourceFinder.json("default_components"));
-    }
-
-    public ComponentManipulation getGlobalComponents() {
-        return globalComponents;
-    }
-
-    public Map<Identifier, ComponentManipulation> getItemComponents() {
-        return itemComponents;
+    public DefaultComponentLoader(RegistryWrapper.WrapperLookup registryWrapper) {
+        /*? if >=1.21.4 {*/
+        super(registryWrapper.getOps(JsonOps.INSTANCE), ComponentManipulation.CODEC, ResourceFinder.json("default_components"));
+        /*?} else if >=1.21.2 {*/
+        /*super(registryWrapper.getOps(JsonOps.INSTANCE), ComponentManipulation.CODEC, "default_components");
+        this.ops = registryWrapper.getOps(JsonOps.INSTANCE);*/
+        /*?} else {*/
+        /*super(GSON, "default_components");
+        this.ops = registryWrapper.getOps(JsonOps.INSTANCE);*/
+        /*?}*/
     }
 
     @Override
@@ -50,55 +56,112 @@ public class DefaultComponentLoader extends JsonDataLoader<DefaultComponentLoade
         return Identifier.of("default_components", "default_components");
     }
 
+    //? if >=1.21.3 {
     @Override
     protected void apply(Map<Identifier, ComponentManipulation> prepared, ResourceManager manager, Profiler profiler) {
-        final Map<Identifier, ComponentManipulation> perItem = HashMap.newHashMap(0);
+        compute(prepared, manager, profiler);
+    }
+    //?} else {
+    /*@Override
+    protected void apply(Map<Identifier, JsonElement> prepared, ResourceManager manager, Profiler profiler) {
+        Map<Identifier, ComponentManipulation> newPrepared = HashMap.newHashMap(prepared.size());
 
-        prepared.forEach((identifier, componentMap) -> {
-            if (identifier.equals(Identifier.ofVanilla("all"))) {
-               globalComponents = componentMap;
-               return;
-           }
-
-            if (Registries.ITEM.containsId(identifier)) {
-                perItem.put(identifier, componentMap);
-            } else {
-                LOGGER.warn("Skipping invalid item {}", identifier);
-            }
-
-            this.itemComponents = Map.copyOf(perItem);
+        prepared.forEach((identifier, jsonElement) -> {
+            ComponentManipulation component = ComponentManipulation.CODEC.parse(ops, jsonElement).getOrThrow();
+            newPrepared.put(identifier, component);
         });
 
-        modifyItems();
-    }
+        compute(newPrepared, manager, profiler);
+    }*/
+    //?}
 
-    void modifyItems() {
-        if (!globalComponents.equals(ComponentManipulation.EMPTY)) {
-            for (Item item : Registries.ITEM) {
-                if (item instanceof ModifyDefaultComponents modifiable) {
-                    Identifier id = Registries.ITEM.getId(item);
-                    modifiable.defaultComponents$modifyComponents(getItemComponents().get(id));
+    protected void compute(Map<Identifier, ComponentManipulation> prepared, ResourceManager manager, Profiler profiler) {
+        final Map<Identifier, ComponentManipulation> perItem = HashMap.newHashMap(0);
+        final Map<String, ComponentManipulation> global = HashMap.newHashMap(0);
+        final List<Identifier> tags = new ArrayList<>(0);
+
+        prepared.forEach((identifier, componentMap) -> {
+            if (componentMap.target().isPresent()) {
+                Either<WildcardEntry, TagEntry> entryEither = componentMap.target().get();
+                entryEither.map(wildcardEntry -> {
+                    String id = wildcardEntry.modId();
+                    if (global.containsKey(id)) {
+                        throw new UnsupportedOperationException("Tried to register wildcard component override " + wildcardEntry.getWildcard() + " twice!");
+                    }
+
+                    global.put(id, componentMap);
+
+                    return null;
+                }, tagEntry -> {
+                    TagEntryAccessor accessor = (TagEntryAccessor) tagEntry;
+                    TagKey<Item> tagKey = TagKey.of(RegistryKeys.ITEM, accessor.getId());
+
+                    if (accessor.isTag()) {
+                        if (tags.contains(tagKey.id())) {
+                            throw new UnsupportedOperationException("Tried to register tag component override " + tagKey.id() + " twice!");
+                        }
+
+                        /* if >=1.21.3 {*/
+                        Optional<RegistryEntryList.Named<Item>> optional = Registries.ITEM.getOptional(tagKey);
+                        /*} else {*/
+                        /*Optional<RegistryEntryList.Named<Item>> optional = Optional.of(Registries.ITEM.getOrCreateEntryList(tagKey));*/
+                        /*}*/
+                        if (optional.isPresent()) {
+                            for (RegistryEntry<Item> entry : optional.get()) {
+                                Optional<RegistryKey<Item>> entryKey = entry.getKey();
+                                entryKey.ifPresent(itemRegistryKey -> {
+                                    perItem.put(itemRegistryKey.getValue(), componentMap);
+                                    tags.add(tagKey.id());
+                                });
+                            }
+                        }
+                    } else {
+                        perItem.put(tagKey.id(), componentMap);
+                    }
+
+                    return null;
+                });
+            } else {
+                if (Registries.ITEM.containsId(identifier)) {
+                    perItem.put(identifier, componentMap);
+                } else {
+                    LOGGER.warn("Skipping invalid item {}", identifier);
                 }
             }
-        } else {
-            itemComponents.forEach((identifier, componentManipulation) -> {
-                Item item = Registries.ITEM.get(identifier);
-                if (item instanceof ModifyDefaultComponents modifiable) {
-                    modifiable.defaultComponents$modifyComponents(getItemComponents().get(identifier));
+        });
+
+        DefaultComponentData.INSTANCE.itemComponents = Map.copyOf(perItem);
+        DefaultComponentData.INSTANCE.modComponents = Map.copyOf(global);
+        DefaultComponentData.INSTANCE.modifyItems();
+    }
+
+    public record ComponentManipulation(Optional<Either<WildcardEntry, TagEntry>> target, Optional<Map<ComponentType<?>, Object>> additions, Optional<List<ComponentType<?>>> removals) {
+        public static final ComponentManipulation EMPTY = new ComponentManipulation(Optional.empty(), Optional.empty(), Optional.empty());
+        public static final Codec<ComponentType<?>> COMPONENT_CODEC = Codec.STRING
+          .flatXmap(
+            id -> {
+                Identifier identifier = Identifier.tryParse(id);
+                ComponentType<?> componentType = Registries.DATA_COMPONENT_TYPE.get(identifier);
+                if (componentType == null) {
+                    return DataResult.error(() -> "No component with type: '" + identifier + "'");
+                } else {
+                    return componentType.shouldSkipSerialization()
+                      ? DataResult.error(() -> "'" + identifier + "' is not a persistent component")
+                      : DataResult.success(componentType);
                 }
-            });
-        }
-    }
-
-    public static SyncPayload createSyncPayload() {
-        return new SyncPayload(INSTANCE.globalComponents, INSTANCE.getItemComponents());
-    }
-
-    public record ComponentManipulation(Optional<Map<ComponentType<?>, Object>> additions, Optional<List<ComponentType<?>>> removals) {
-        public static final ComponentManipulation EMPTY = new ComponentManipulation(Optional.empty(), Optional.empty());
+            },
+            type -> {
+                Identifier identifier = Registries.DATA_COMPONENT_TYPE.getId(type);
+                return identifier == null
+                  ? DataResult.error(() -> "Unregistered component: " + type)
+                  : DataResult.success(identifier.toString());
+            }
+          );
+        @SuppressWarnings("unchecked")
         public static final Codec<ComponentManipulation> CODEC = RecordCodecBuilder.create(instance ->
           instance.group(
-            ComponentType.TYPE_TO_VALUE_MAP_CODEC.optionalFieldOf("add").forGetter(ComponentManipulation::additions),
+            Codec.either(WildcardEntry.CODEC, TagEntry.CODEC).optionalFieldOf("target").forGetter(ComponentManipulation::target),
+            Codec.dispatchedMap(COMPONENT_CODEC, component -> (Codec<Object>) component.getCodecOrThrow()).optionalFieldOf("add").forGetter(ComponentManipulation::additions),
             ComponentType.CODEC.listOf().optionalFieldOf("remove").forGetter(ComponentManipulation::removals)
           ).apply(instance, ComponentManipulation::new)
         );
@@ -150,7 +213,7 @@ public class DefaultComponentLoader extends JsonDataLoader<DefaultComponentLoade
                     remove = Optional.of(List.copyOf(removals));
                 }
 
-                return new DefaultComponentLoader.ComponentManipulation(add, remove);
+                return new DefaultComponentLoader.ComponentManipulation(Optional.empty(), add, remove);
             }
 
             private static <T> void encodeComponent(RegistryByteBuf buf, ComponentType<T> type, Object value) {
@@ -174,6 +237,45 @@ public class DefaultComponentLoader extends JsonDataLoader<DefaultComponentLoade
             if (removals().isPresent()) {
                 removals().get().forEach((componentType) -> action.accept((C) componentType));
             }
+        }
+    }
+
+    public record WildcardEntry(String modId) {
+        public static final Codec<WildcardEntry> CODEC = Codec.STRING.comapFlatMap(wildcard -> {
+            try {
+                return DataResult.success(splitOn(wildcard, ':'));
+            } catch (InvalidIdentifierException e) {
+                return DataResult.error(() -> "Not a valid wildcard: " + wildcard + " " + e.getMessage());
+            }
+        }, WildcardEntry::getWildcard).stable();
+
+        public static WildcardEntry splitOn(String id, char delimiter) {
+            int i = id.indexOf(delimiter);
+            if (i > 0) {
+                String modId = id.substring(0, i);
+                String wildcard = id.substring(i + 1);
+                if (wildcard.equals("*")) {
+                    if (Identifier.isNamespaceValid(modId)) {
+                        return new WildcardEntry(id.substring(0, i));
+                    } else {
+                        throw new InvalidIdentifierException("Non [a-z0-9_.-] character in namespace of location: " + modId + ":" + wildcard);
+                    }
+                } else {
+                    throw new InvalidIdentifierException("Non wildcard [*] character in path of location: " + modId + ":" + wildcard);
+                }
+            } else if (id.equals("*")) {
+                return new WildcardEntry(id);
+            } else {
+                throw new InvalidIdentifierException("Non wildcard [*] character in path of location: " + id);
+            }
+        }
+
+        public boolean isGeneric() {
+            return modId.equals("*");
+        }
+
+        public String getWildcard() {
+            return isGeneric() ? modId : modId + ":" + "*";
         }
     }
 }

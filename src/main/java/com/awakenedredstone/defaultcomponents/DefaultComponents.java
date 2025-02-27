@@ -1,27 +1,19 @@
 package com.awakenedredstone.defaultcomponents;
 
+import com.awakenedredstone.defaultcomponents.data.DefaultComponentData;
 import com.awakenedredstone.defaultcomponents.data.DefaultComponentLoader;
 import com.awakenedredstone.defaultcomponents.duck.RebuildDefaultComponents;
-import com.awakenedredstone.defaultcomponents.mixin.MergedComponentMapAccessor;
 import com.awakenedredstone.defaultcomponents.network.DefaultComponentsPresentPayload;
 import com.awakenedredstone.defaultcomponents.network.SyncPayload;
 import com.awakenedredstone.defaultcomponents.util.ConcurrentWeakSet;
 import com.mojang.authlib.GameProfile;
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
-import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.component.ComponentMap;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtHelper;
-import net.minecraft.nbt.NbtOps;
 import net.minecraft.resource.ResourceType;
-import net.minecraft.server.command.CommandManager;
-import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 import org.slf4j.Logger;
@@ -40,7 +32,10 @@ public class DefaultComponents implements ModInitializer {
         //TODO: Make packets to trick vanilla clients
 
         ResourceManagerHelper resourceManagerHelper = ResourceManagerHelper.get(ResourceType.SERVER_DATA);
-        resourceManagerHelper.registerReloadListener(DefaultComponentLoader.INSTANCE);
+        resourceManagerHelper.registerReloadListener(id("default_components"), DefaultComponentLoader::new);
+
+        ServerLifecycleEvents.START_DATA_PACK_RELOAD.register((server, resourceManager) -> {
+        });
 
         ServerLifecycleEvents.END_DATA_PACK_RELOAD.register((server, resourceManager, success) -> {
             try {
@@ -49,7 +44,7 @@ public class DefaultComponents implements ModInitializer {
                 }
 
                 for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
-                    ServerPlayNetworking.send(player, DefaultComponentLoader.createSyncPayload());
+                    ServerPlayNetworking.send(player, DefaultComponentData.createSyncPayload());
                 }
             } catch (Throwable e) {
                 LOGGER.error("Failed to update default components", e);
@@ -59,7 +54,7 @@ public class DefaultComponents implements ModInitializer {
         PayloadTypeRegistry.playS2C().register(SyncPayload.ID, SyncPayload.PACKET_CODEC);
         PayloadTypeRegistry.playC2S().register(DefaultComponentsPresentPayload.ID, DefaultComponentsPresentPayload.PACKET_CODEC);
 
-        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> sender.sendPacket(DefaultComponentLoader.createSyncPayload()));
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> sender.sendPacket(DefaultComponentData.createSyncPayload()));
 
         ServerPlayNetworking.registerGlobalReceiver(DefaultComponentsPresentPayload.ID, (payload, context) -> {
             MODDED_PLAYERS.add(context.player().getGameProfile());

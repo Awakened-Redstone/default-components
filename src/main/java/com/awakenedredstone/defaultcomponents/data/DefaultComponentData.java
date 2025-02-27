@@ -1,0 +1,46 @@
+package com.awakenedredstone.defaultcomponents.data;
+
+import com.awakenedredstone.defaultcomponents.duck.ModifyDefaultComponents;
+import com.awakenedredstone.defaultcomponents.network.SyncPayload;
+import net.minecraft.item.Item;
+import net.minecraft.registry.Registries;
+import net.minecraft.util.Identifier;
+
+import java.util.Map;
+
+public class DefaultComponentData {
+    public static final DefaultComponentData INSTANCE = new DefaultComponentData();
+
+    Map<String, DefaultComponentLoader.ComponentManipulation> modComponents = Map.of();
+    Map<Identifier, DefaultComponentLoader.ComponentManipulation> itemComponents = Map.of();
+
+    public Map<String, DefaultComponentLoader.ComponentManipulation> getModComponents() {
+        return modComponents;
+    }
+
+    public Map<Identifier, DefaultComponentLoader.ComponentManipulation> getItemComponents() {
+        return itemComponents;
+    }
+
+    void modifyItems() {
+        if (!modComponents.isEmpty()) {
+            for (Item item : Registries.ITEM) {
+                if (item instanceof ModifyDefaultComponents modifiable) {
+                    Identifier id = Registries.ITEM.getId(item);
+                    modifiable.defaultComponents$modifyComponents(getItemComponents().get(id), getModComponents().get(id.getNamespace()));
+                }
+            }
+        } else {
+            itemComponents.forEach((identifier, componentManipulation) -> {
+                Item item = Registries.ITEM.getOptionalValue(identifier).orElse(null);
+                if (item instanceof ModifyDefaultComponents modifiable) {
+                    modifiable.defaultComponents$modifyComponents(getItemComponents().get(identifier), null);
+                }
+            });
+        }
+    }
+
+    public static SyncPayload createSyncPayload() {
+        return new SyncPayload(INSTANCE.modComponents, INSTANCE.getItemComponents());
+    }
+}

@@ -1,11 +1,11 @@
 package com.awakenedredstone.defaultcomponents.mixin;
 
 import com.awakenedredstone.defaultcomponents.DefaultComponents;
+import com.awakenedredstone.defaultcomponents.data.DefaultComponentData;
 import com.awakenedredstone.defaultcomponents.data.DefaultComponentLoader;
 import com.awakenedredstone.defaultcomponents.duck.RebuildDefaultComponents;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.sugar.Local;
-import net.minecraft.component.Component;
 import net.minecraft.component.ComponentChanges;
 import net.minecraft.component.MergedComponentMap;
 import net.minecraft.item.Item;
@@ -50,10 +50,19 @@ public abstract class ItemStackMixin implements RebuildDefaultComponents {
                 ComponentChanges.Builder builder = ComponentChanges.builder();
                 Identifier id = Registries.ITEM.getId(stack.getItem());
 
-                DefaultComponentLoader.INSTANCE.getGlobalComponents().forEachRemoved(builder::remove);
-                DefaultComponentLoader.INSTANCE.getGlobalComponents().forEachAdded(builder::add);
+                DefaultComponentLoader.ComponentManipulation global = DefaultComponentData.INSTANCE.getModComponents().get("*");
+                if (global != null) {
+                    global.forEachRemoved(builder::remove);
+                    global.forEachAdded(builder::add);
+                }
 
-                DefaultComponentLoader.ComponentManipulation manipulation = DefaultComponentLoader.INSTANCE.getItemComponents().get(id);
+                DefaultComponentLoader.ComponentManipulation modManipulation = DefaultComponentData.INSTANCE.getModComponents().get(id.getNamespace());
+                if (modManipulation != null) {
+                    modManipulation.forEachRemoved(builder::remove);
+                    modManipulation.forEachAdded(builder::add);
+                }
+
+                DefaultComponentLoader.ComponentManipulation manipulation = DefaultComponentData.INSTANCE.getItemComponents().get(id);
                 if (manipulation != null) {
                     manipulation.forEachRemoved(builder::remove);
                     manipulation.forEachAdded(builder::add);

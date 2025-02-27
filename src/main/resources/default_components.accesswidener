@@ -1,0 +1,7 @@
+accessWidener v2 named
+
+#? if >=1.21.4 {
+extendable method net/minecraft/resource/JsonDataLoader <init> (Lcom/mojang/serialization/DynamicOps;Lcom/mojang/serialization/Codec;Lnet/minecraft/resource/ResourceFinder;)V
+#?} else if >= 1.21.2 {
+#accessible method net/minecraft/resource/JsonDataLoader <init> (Lcom/mojang/serialization/DynamicOps;Lcom/mojang/serialization/Codec;Ljava/lang/String;)V
+#?}

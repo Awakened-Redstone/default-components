@@ -1,13 +1,13 @@
 package com.awakenedredstone.defaultcomponents.mixin;
 
+import com.awakenedredstone.defaultcomponents.data.DefaultComponentData;
 import com.awakenedredstone.defaultcomponents.data.DefaultComponentLoader;
 import com.awakenedredstone.defaultcomponents.duck.ModifyDefaultComponents;
 import net.minecraft.component.Component;
 import net.minecraft.component.ComponentMap;
 import net.minecraft.component.ComponentType;
-import net.minecraft.component.DataComponentTypes;
 import net.minecraft.item.Item;
-import org.objectweb.asm.Opcodes;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -25,12 +25,12 @@ public class ItemMixin implements ModifyDefaultComponents {
 
     @Override
     @SuppressWarnings("unchecked")
-    public void defaultComponents$modifyComponents(DefaultComponentLoader.ComponentManipulation components) {
+    public void defaultComponents$modifyComponents(DefaultComponentLoader.ComponentManipulation itemComponents, DefaultComponentLoader.ComponentManipulation modComponents) {
         ComponentMap.Builder builder = ComponentMap.builder();
 
-        DefaultComponentLoader.ComponentManipulation globalComponents = DefaultComponentLoader.INSTANCE.getGlobalComponents();
+        DefaultComponentLoader.ComponentManipulation globalComponents = DefaultComponentData.INSTANCE.getModComponents().getOrDefault("*", DefaultComponentLoader.ComponentManipulation.EMPTY);
         for (Component<?> component : defaultComponents) {
-            if (globalComponents.isRemoved(component.type()) || (components != null && components.isRemoved(component.type()))) {
+            if (globalComponents.isRemoved(component.type()) || (modComponents != null && modComponents.isRemoved(component.type())) || (itemComponents != null && itemComponents.isRemoved(component.type()))) {
                 continue;
             }
 
@@ -39,8 +39,12 @@ public class ItemMixin implements ModifyDefaultComponents {
 
         globalComponents.forEachAdded(builder::add);
 
-        if (components != null) {
-            components.forEachAdded(builder::add);
+        if (modComponents != null) {
+            modComponents.forEachAdded(builder::add);
+        }
+
+        if (itemComponents != null) {
+            itemComponents.forEachAdded(builder::add);
         }
 
         this.components = builder.build();
