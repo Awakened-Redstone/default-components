@@ -5,7 +5,7 @@
 - Support for **modded items**
 - Support for **modded components**
 - Dedicated and detailed **documentation**
-- **Optional** on the client
+- Client code to further extend beyond vanilla/serverside limitation 
 - Great for
   - **modpacks**, the client support provides extended mod support, like showing on [REI](https://modrinth.com/mod/rei)
   - **server-side** modding with the vanilla compatibility
