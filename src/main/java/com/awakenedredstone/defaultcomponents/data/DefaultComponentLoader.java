@@ -36,19 +36,18 @@ public class DefaultComponentLoader extends /*? if >=1.21.2 {*/JsonDataLoader<De
     public static final Logger LOGGER = LoggerFactory.getLogger("Default Components Data Parser");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
     /*? if <1.21.2 {*/
-    /*private final RegistryOps<JsonElement> ops;*/
-    /*?}*/
+    /*private final RegistryOps<JsonElement> ops;
+    *//*?}*/
 
     public DefaultComponentLoader(RegistryWrapper.WrapperLookup registryWrapper) {
         /*? if >=1.21.4 {*/
-        super(registryWrapper.getOps(JsonOps.INSTANCE), ComponentManipulation.CODEC, ResourceFinder.json("default_components"));
-        /*?} else if >=1.21.2 {*/
-        /*super(registryWrapper.getOps(JsonOps.INSTANCE), ComponentManipulation.CODEC, "default_components");
-        this.ops = registryWrapper.getOps(JsonOps.INSTANCE);*/
+        /*super(registryWrapper.getOps(JsonOps.INSTANCE), ComponentManipulation.CODEC, ResourceFinder.json("default_components"));
+        *//*?} else if >=1.21.2 {*/
+        super(registryWrapper.getOps(JsonOps.INSTANCE), ComponentManipulation.CODEC, "default_components");
         /*?} else {*/
         /*super(GSON, "default_components");
-        this.ops = registryWrapper.getOps(JsonOps.INSTANCE);*/
-        /*?}*/
+        this.ops = registryWrapper.getOps(JsonOps.INSTANCE);
+        *//*?}*/
     }
 
     @Override
@@ -56,7 +55,7 @@ public class DefaultComponentLoader extends /*? if >=1.21.2 {*/JsonDataLoader<De
         return Identifier.of("default_components", "default_components");
     }
 
-    //? if >=1.21.3 {
+    //? if >=1.21.2 {
     @Override
     protected void apply(Map<Identifier, ComponentManipulation> prepared, ResourceManager manager, Profiler profiler) {
         compute(prepared, manager, profiler);
@@ -72,8 +71,8 @@ public class DefaultComponentLoader extends /*? if >=1.21.2 {*/JsonDataLoader<De
         });
 
         compute(newPrepared, manager, profiler);
-    }*/
-    //?}
+    }
+    *///?}
 
     protected void compute(Map<Identifier, ComponentManipulation> prepared, ResourceManager manager, Profiler profiler) {
         final Map<Identifier, ComponentManipulation> perItem = HashMap.newHashMap(0);
@@ -101,11 +100,11 @@ public class DefaultComponentLoader extends /*? if >=1.21.2 {*/JsonDataLoader<De
                             throw new UnsupportedOperationException("Tried to register tag component override " + tagKey.id() + " twice!");
                         }
 
-                        /* if >=1.21.3 {*/
+                        /*? if >=1.21.2 {*/
                         Optional<RegistryEntryList.Named<Item>> optional = Registries.ITEM.getOptional(tagKey);
-                        /*} else {*/
-                        /*Optional<RegistryEntryList.Named<Item>> optional = Optional.of(Registries.ITEM.getOrCreateEntryList(tagKey));*/
-                        /*}*/
+                        /*?} else {*/
+                        /*Optional<RegistryEntryList.Named<Item>> optional = Optional.of(Registries.ITEM.getOrCreateEntryList(tagKey));
+                        *//*?}*/
                         if (optional.isPresent()) {
                             for (RegistryEntry<Item> entry : optional.get()) {
                                 Optional<RegistryKey<Item>> entryKey = entry.getKey();

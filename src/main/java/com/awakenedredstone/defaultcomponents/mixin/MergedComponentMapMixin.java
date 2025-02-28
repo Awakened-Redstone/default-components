@@ -10,5 +10,6 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(MergedComponentMap.class)
 public class MergedComponentMapMixin {
+    // Allows accessor to not crash the game, do not remove
     @Shadow @Final @Mutable private ComponentMap baseComponents;
 }

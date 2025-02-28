@@ -1,0 +1,3 @@
+accessWidener v2 named
+
+extendable method net/minecraft/resource/JsonDataLoader <init> (Lcom/mojang/serialization/DynamicOps;Lcom/mojang/serialization/Codec;Ljava/lang/String;)V

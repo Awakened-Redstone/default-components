@@ -24,6 +24,7 @@ public class DefaultComponentData {
 
     void modifyItems() {
         if (!modComponents.isEmpty()) {
+            //TODO: Improve processing time
             for (Item item : Registries.ITEM) {
                 if (item instanceof ModifyDefaultComponents modifiable) {
                     Identifier id = Registries.ITEM.getId(item);
@@ -32,7 +33,11 @@ public class DefaultComponentData {
             }
         } else {
             itemComponents.forEach((identifier, componentManipulation) -> {
+                //? if >=1.21.2 {
                 Item item = Registries.ITEM.getOptionalValue(identifier).orElse(null);
+                //?} else {
+                /*Item item = Registries.ITEM.getOrEmpty(identifier).orElse(null);
+                *///?}
                 if (item instanceof ModifyDefaultComponents modifiable) {
                     modifiable.defaultComponents$modifyComponents(getItemComponents().get(identifier), null);
                 }

@@ -7,24 +7,32 @@ import com.awakenedredstone.defaultcomponents.duck.RebuildDefaultComponents;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.minecraft.component.ComponentChanges;
+//? if >=1.21.2 {
 import net.minecraft.component.MergedComponentMap;
+//?} else {
+/*import net.minecraft.component.ComponentMapImpl;
+*///?}
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemConvertible;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mutable;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
 import net.minecraft.util.Identifier;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Mutable;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import xyz.nucleoid.packettweaker.PacketContext;
 
 @Mixin(ItemStack.class)
 public abstract class ItemStackMixin implements RebuildDefaultComponents {
+    //? if >=1.21.2 {
     @Shadow @Final @Mutable MergedComponentMap components;
+    //?} else {
+    //@Shadow @Final @Mutable ComponentMapImpl components;
+    //?}
     @Shadow public abstract Item getItem();
 
     @Override
@@ -32,14 +40,25 @@ public abstract class ItemStackMixin implements RebuildDefaultComponents {
         ((MergedComponentMapAccessor) (Object) components).setBaseComponents(getItem().getComponents());
     }
 
+    //? if >=1.21.2 {
     @Inject(method = "<init>(Lnet/minecraft/item/ItemConvertible;ILnet/minecraft/component/MergedComponentMap;)V", at = @At("TAIL"))
     private void track(ItemConvertible item, int count, MergedComponentMap components, CallbackInfo ci) {
         DefaultComponents.ITEM_STACKS.add(this);
     }
+    //?} else {
+    /*@Inject(method = "<init>(Lnet/minecraft/item/ItemConvertible;ILnet/minecraft/component/ComponentMapImpl;)V", at = @At("TAIL"))
+    private void track(ItemConvertible item, int count, ComponentMapImpl components, CallbackInfo ci) {
+        DefaultComponents.ITEM_STACKS.add(this);
+    }
+    *///?}
 
     @Mixin(targets = "net.minecraft.item.ItemStack$1")
     private static class PacketCodec {
+        //? if >=1.21.2 {
         @ModifyExpressionValue(method = "encode(Lnet/minecraft/network/RegistryByteBuf;Lnet/minecraft/item/ItemStack;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/component/MergedComponentMap;getChanges()Lnet/minecraft/component/ComponentChanges;"))
+        //?} else {
+        /*@ModifyExpressionValue(method = "encode(Lnet/minecraft/network/RegistryByteBuf;Lnet/minecraft/item/ItemStack;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/component/ComponentMapImpl;getChanges()Lnet/minecraft/component/ComponentChanges;"))
+        *///?}
         private ComponentChanges informVanilla(ComponentChanges original, @Local(argsOnly = true) ItemStack stack) {
             PacketContext context = PacketContext.get();
             if (context == null || context.getPlayer() == null || context.getGameProfile() == null) {
@@ -78,42 +97,4 @@ public abstract class ItemStackMixin implements RebuildDefaultComponents {
             return original;
         }
     }
-
-    /*@ModifyReturnValue(method = "getComponents", at = @At("RETURN"))
-    private ComponentMap patchComponents(ComponentMap original) {
-        if (NetworkUtil.isServerNetworkingThread() && this.getItem() instanceof ModifyDefaultComponents item) {
-            Identifier id = Registries.ITEM.getId(this.getItem());
-            DefaultComponentLoader.ComponentManipulation components = DefaultComponentLoader.INSTANCE.getItemComponents().get(id);
-            ComponentMap.Builder builder = ComponentMap.builder();
-
-            DefaultComponentLoader.ComponentManipulation globalComponents = DefaultComponentLoader.INSTANCE.getGlobalComponents();
-            for (Component<?> component : item.defaultComponents$defaultComponents()) {
-                if (globalComponents.isRemoved(component.type()) || (components != null && components.isRemoved(component.type()))) {
-                    continue;
-                }
-
-                builder.add((ComponentType<Object>) component.type(), component.value());
-            }
-
-            globalComponents.forEachAdded((type, value) -> builder.add((ComponentType<Object>) type, value));
-
-            if (components != null) {
-                components.forEachAdded((componentType, value) -> {
-                    builder.add((ComponentType<Object>) componentType, value);
-                });
-            }
-
-            for (Component<?> component : original) {
-                if (globalComponents.isRemoved(component.type()) || (components != null && components.isRemoved(component.type()))) {
-                    continue;
-                }
-
-                builder.add((ComponentType<Object>) component.type(), component.value());
-            }
-
-            return new ComponentMapImpl(builder.build());
-        }
-
-        return original;
-    }*/
 }

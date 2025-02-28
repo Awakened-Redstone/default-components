@@ -21,7 +21,7 @@
     ]
   },
 
-  "accessWidener": "default_components.accesswidener",
+  "accessWidener": "${accessWidener}",
   "mixins": [
     "default_components.mixins.json"
   ],
