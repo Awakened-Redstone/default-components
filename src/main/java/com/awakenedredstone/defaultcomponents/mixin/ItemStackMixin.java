@@ -28,11 +28,11 @@ import xyz.nucleoid.packettweaker.PacketContext;
 
 @Mixin(ItemStack.class)
 public abstract class ItemStackMixin implements RebuildDefaultComponents {
-    //? if >=1.21.2 {
+    /*? if >=1.21.2 {*/
     @Shadow @Final @Mutable MergedComponentMap components;
-    //?} else {
-    //@Shadow @Final @Mutable ComponentMapImpl components;
-    //?}
+    /*?} else {*/
+    /*@Shadow @Final @Mutable ComponentMapImpl components;
+    *//*?}*/
     @Shadow public abstract Item getItem();
 
     @Override
@@ -40,25 +40,25 @@ public abstract class ItemStackMixin implements RebuildDefaultComponents {
         ((MergedComponentMapAccessor) (Object) components).setBaseComponents(getItem().getComponents());
     }
 
-    //? if >=1.21.2 {
+    /*? if >=1.21.2 {*/
     @Inject(method = "<init>(Lnet/minecraft/item/ItemConvertible;ILnet/minecraft/component/MergedComponentMap;)V", at = @At("TAIL"))
     private void track(ItemConvertible item, int count, MergedComponentMap components, CallbackInfo ci) {
         DefaultComponents.ITEM_STACKS.add(this);
     }
-    //?} else {
+    /*?} else {*/
     /*@Inject(method = "<init>(Lnet/minecraft/item/ItemConvertible;ILnet/minecraft/component/ComponentMapImpl;)V", at = @At("TAIL"))
     private void track(ItemConvertible item, int count, ComponentMapImpl components, CallbackInfo ci) {
         DefaultComponents.ITEM_STACKS.add(this);
     }
-    *///?}
+    *//*?}*/
 
     @Mixin(targets = "net.minecraft.item.ItemStack$1")
     private static class PacketCodec {
         //? if >=1.21.2 {
         @ModifyExpressionValue(method = "encode(Lnet/minecraft/network/RegistryByteBuf;Lnet/minecraft/item/ItemStack;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/component/MergedComponentMap;getChanges()Lnet/minecraft/component/ComponentChanges;"))
-        //?} else {
+        /*?} else {*/
         /*@ModifyExpressionValue(method = "encode(Lnet/minecraft/network/RegistryByteBuf;Lnet/minecraft/item/ItemStack;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/component/ComponentMapImpl;getChanges()Lnet/minecraft/component/ComponentChanges;"))
-        *///?}
+        *//*?}*/
         private ComponentChanges informVanilla(ComponentChanges original, @Local(argsOnly = true) ItemStack stack) {
             PacketContext context = PacketContext.get();
             if (context == null || context.getPlayer() == null || context.getGameProfile() == null) {

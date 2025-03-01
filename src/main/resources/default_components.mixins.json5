@@ -8,7 +8,7 @@
     "ItemStackMixin",
     "ItemStackMixin$PacketCodec",
     "MergedComponentMapAccessor",
-    //?if >=1.21.2 {
+    //? if >=1.21.2 {
     "MergedComponentMapMixin",
     //?}
     "ServerCommonNetworkHandlerAccessor",

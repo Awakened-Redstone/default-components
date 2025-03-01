@@ -41,10 +41,10 @@ public class DefaultComponentLoader extends /*? if >=1.21.2 {*/JsonDataLoader<De
 
     public DefaultComponentLoader(RegistryWrapper.WrapperLookup registryWrapper) {
         /*? if >=1.21.4 {*/
-        /*super(registryWrapper.getOps(JsonOps.INSTANCE), ComponentManipulation.CODEC, ResourceFinder.json("default_components"));
-        *//*?} else if >=1.21.2 {*/
-        super(registryWrapper.getOps(JsonOps.INSTANCE), ComponentManipulation.CODEC, "default_components");
-        /*?} else {*/
+        super(registryWrapper.getOps(JsonOps.INSTANCE), ComponentManipulation.CODEC, ResourceFinder.json("default_components"));
+        /*?} else if >=1.21.2 {*/
+        /*super(registryWrapper.getOps(JsonOps.INSTANCE), ComponentManipulation.CODEC, "default_components");
+        *//*?} else {*/
         /*super(GSON, "default_components");
         this.ops = registryWrapper.getOps(JsonOps.INSTANCE);
         *//*?}*/
