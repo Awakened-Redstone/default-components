@@ -62,7 +62,7 @@ dependencies {
     modImplementation("net.fabricmc.fabric-api:fabric-api:${property("fabric_version")}")
     modImplementation(include("xyz.nucleoid:packet-tweaker:${property("packet_tweaker")}")!!)
 
-    include(api("blue.endless:jankson:${property("jankson_version")}")!!)
+    //include(api("blue.endless:jankson:${property("jankson_version")}")!!)
 }
 
 j52j {
@@ -91,6 +91,13 @@ tasks.processResources {
     filesMatching("fabric.mod.json") {
         expand(map)
     }
+
+    stonecutter.versions.forEach {
+        val version: String = it.version
+        if (version != minecraftVersion) {
+            exclude("**/default_components.${version}.accesswidener")
+        }
+    }
 }
 
 val targetJavaVersion = 21
@@ -116,9 +123,6 @@ tasks.jar {
     from("LICENSE") {
         rename { "${it}_${archivesBaseName}" }
     }
-    /*from("$minecraftVersion.accesswidener") {
-        rename { "default_components.accesswidener" }
-    }*/
 }
 
 val CHANGELOG: String = if (file("CHANGELOG.md").exists()) {
