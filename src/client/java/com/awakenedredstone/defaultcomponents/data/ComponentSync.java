@@ -12,9 +12,6 @@ public class ComponentSync {
         loader.modComponents = payload.globalComponents();
         loader.itemComponents = payload.itemComponents();
         loader.modifyItems();
-        synchronized (DefaultComponents.ITEM_STACKS) {
-            DefaultComponents.ITEM_STACKS.forEach(RebuildDefaultComponents::defaultComponents$rebuildComponents);
-        }
     }
 
     public static void unload() {

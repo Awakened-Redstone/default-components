@@ -7,18 +7,6 @@ import com.awakenedredstone.defaultcomponents.duck.RebuildDefaultComponents;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.minecraft.component.ComponentChanges;
-//? if >=1.21.2 {
-import net.minecraft.component.MergedComponentMap;
-//?} else {
-/*import net.minecraft.component.ComponentMapImpl;
-*///?}
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemConvertible;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mutable;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
 import net.minecraft.util.Identifier;
@@ -26,31 +14,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import xyz.nucleoid.packettweaker.PacketContext;
 
-@Mixin(ItemStack.class)
+@Mixin(value = ItemStack.class, priority = 990)
 public abstract class ItemStackMixin implements RebuildDefaultComponents {
-    /*? if >=1.21.2 {*/
-    @Shadow @Final @Mutable MergedComponentMap components;
-    /*?} else {*/
-    /*@Shadow @Final @Mutable ComponentMapImpl components;
-    *//*?}*/
-    @Shadow public abstract Item getItem();
-
-    @Override
-    public void defaultComponents$rebuildComponents() {
-        ((MergedComponentMapAccessor) (Object) components).setBaseComponents(getItem().getComponents());
-    }
-
-    /*? if >=1.21.2 {*/
-    @Inject(method = "<init>(Lnet/minecraft/item/ItemConvertible;ILnet/minecraft/component/MergedComponentMap;)V", at = @At("TAIL"))
-    private void track(ItemConvertible item, int count, MergedComponentMap components, CallbackInfo ci) {
-        DefaultComponents.ITEM_STACKS.add(this);
-    }
-    /*?} else {*/
-    /*@Inject(method = "<init>(Lnet/minecraft/item/ItemConvertible;ILnet/minecraft/component/ComponentMapImpl;)V", at = @At("TAIL"))
-    private void track(ItemConvertible item, int count, ComponentMapImpl components, CallbackInfo ci) {
-        DefaultComponents.ITEM_STACKS.add(this);
-    }
-    *//*?}*/
 
     @Mixin(targets = "net.minecraft.item.ItemStack$1")
     private static class PacketCodec {

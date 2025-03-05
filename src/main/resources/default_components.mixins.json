@@ -7,16 +7,9 @@
     "ItemMixin",
     "ItemStackMixin",
     "ItemStackMixin$PacketCodec",
-    "MergedComponentMapAccessor",
-    //? if >=1.21.2 {
-    "MergedComponentMapMixin",
-    //?}
-    "ServerCommonNetworkHandlerAccessor",
-    "ServerPlayNetworkAddonAccessor",
     "TagEntryAccessor"
   ],
   "injectors": {
     "defaultRequire": 1
-  },
-  "refmap": "default-components-refmap.json"
+  }
 }

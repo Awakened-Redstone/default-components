@@ -2,7 +2,6 @@ package com.awakenedredstone.defaultcomponents;
 
 import com.awakenedredstone.defaultcomponents.data.DefaultComponentData;
 import com.awakenedredstone.defaultcomponents.data.DefaultComponentLoader;
-import com.awakenedredstone.defaultcomponents.duck.RebuildDefaultComponents;
 import com.awakenedredstone.defaultcomponents.network.DefaultComponentsPresentPayload;
 import com.awakenedredstone.defaultcomponents.network.SyncPayload;
 import com.awakenedredstone.defaultcomponents.util.ConcurrentWeakSet;
@@ -25,7 +24,6 @@ public class DefaultComponents implements ModInitializer {
     public static final String MOD_ID = "default_components";
     public static final Logger LOGGER = LoggerFactory.getLogger("Default Components");
     public static final Set<GameProfile> MODDED_PLAYERS = new ConcurrentWeakSet<>(0);
-    public static final Set<RebuildDefaultComponents> ITEM_STACKS = new ConcurrentWeakSet<>(1024);
 
     @Override
     public void onInitialize() {
@@ -38,16 +36,15 @@ public class DefaultComponents implements ModInitializer {
         });
 
         ServerLifecycleEvents.END_DATA_PACK_RELOAD.register((server, resourceManager, success) -> {
-            try {
-                synchronized (ITEM_STACKS) {
-                    ITEM_STACKS.forEach(RebuildDefaultComponents::defaultComponents$rebuildComponents);
-                }
 
-                for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
-                    ServerPlayNetworking.send(player, DefaultComponentData.createSyncPayload());
+            if (success) {
+                try {
+                    for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+                        ServerPlayNetworking.send(player, DefaultComponentData.createSyncPayload());
+                    }
+                } catch (Exception e) {
+                    LOGGER.error("Failed to update default components", e);
                 }
-            } catch (Throwable e) {
-                LOGGER.error("Failed to update default components", e);
             }
         });
 
@@ -60,7 +57,7 @@ public class DefaultComponents implements ModInitializer {
             MODDED_PLAYERS.add(context.player().getGameProfile());
         });
 
-        //TODO: better development/debug tools, the command was too volatile
+
     }
 
     public static Identifier id(String path) {

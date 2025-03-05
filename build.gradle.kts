@@ -36,6 +36,10 @@ loom {
         runDir = "../../run"
     }
 
+    runConfigs["server"].apply {
+        runDir = "../../run_server"
+    }
+
     runConfigs["client"].apply {
         vmArgs("-Dmixin.debug.export=true")
         programArgs("--quickPlaySingleplayer \"New World (1)\"", "--uuid 2e7c2349-94ec-4862-8b68-344d049840d2 --username AwakenedRedstone")
@@ -50,6 +54,7 @@ loom {
 
 repositories {
     maven("https://maven.nucleoid.xyz")
+    //maven("https://maven.wispforest.io/releases/")
 }
 
 dependencies {
@@ -62,6 +67,7 @@ dependencies {
     modImplementation("net.fabricmc.fabric-api:fabric-api:${property("fabric_version")}")
     modImplementation(include("xyz.nucleoid:packet-tweaker:${property("packet_tweaker")}")!!)
 
+    //modCompileOnly("io.wispforest:owo-lib:${property("owo_version")}")
     //include(api("blue.endless:jankson:${property("jankson_version")}")!!)
 }
 

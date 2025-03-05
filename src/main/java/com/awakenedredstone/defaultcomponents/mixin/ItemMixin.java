@@ -1,5 +1,6 @@
 package com.awakenedredstone.defaultcomponents.mixin;
 
+import com.awakenedredstone.defaultcomponents.component.RuntimeComponentMap;
 import com.awakenedredstone.defaultcomponents.data.DefaultComponentData;
 import com.awakenedredstone.defaultcomponents.data.DefaultComponentLoader;
 import com.awakenedredstone.defaultcomponents.duck.ModifyDefaultComponents;
@@ -17,10 +18,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class ItemMixin implements ModifyDefaultComponents {
     @Shadow @Mutable @Final private ComponentMap components;
     @Unique private ComponentMap defaultComponents;
+    @Unique private RuntimeComponentMap default_components$componentMap;
 
     @Inject(method = "<init>", at = @At("TAIL"), require = 1)
     private void storeInitialDefault(CallbackInfo ci) {
         defaultComponents = components;
+
+        default_components$componentMap = new RuntimeComponentMap(defaultComponents);
+        components = default_components$componentMap;
     }
 
     @Override
@@ -47,7 +52,7 @@ public class ItemMixin implements ModifyDefaultComponents {
             itemComponents.forEachAdded(builder::add);
         }
 
-        this.components = builder.build();
+        this.default_components$componentMap.setMap(builder.build());
     }
 
     @Override
