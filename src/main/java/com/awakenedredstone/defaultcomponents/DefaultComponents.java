@@ -7,13 +7,24 @@ import com.awakenedredstone.defaultcomponents.network.SyncPayload;
 import com.awakenedredstone.defaultcomponents.util.ConcurrentWeakSet;
 import com.mojang.authlib.GameProfile;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
+import net.minecraft.command.argument.ItemStackArgument;
+import net.minecraft.command.argument.ItemStackArgumentType;
+import net.minecraft.component.ComponentMap;
+import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.NbtHelper;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.resource.ResourceType;
+import net.minecraft.server.command.CommandManager;
+import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +68,44 @@ public class DefaultComponents implements ModInitializer {
             MODDED_PLAYERS.add(context.player().getGameProfile());
         });
 
+        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
+            dispatcher.register(
+              CommandManager.literal("default-components")
+                .executes(context -> {
+                    ServerCommandSource source = context.getSource();
+                    if (!source.isExecutedByPlayer()) {
+                        source.sendError(Text.literal("Can not get handstack of a non player executor"));
+                        return 0;
+                    }
 
+                    DynamicRegistryManager.Immutable registryManager = source.getServer().getRegistryManager();
+                    ComponentMap components = source.getPlayer().getMainHandStack().getItem().getComponents();
+                    LOGGER.info("{}", components);
+
+                    NbtElement nbtElement = ComponentMap.CODEC.encodeStart(registryManager.getOps(NbtOps.INSTANCE), components).getOrThrow();
+
+                    source.sendFeedback(() -> NbtHelper.toPrettyPrintedText(nbtElement), false);
+
+                    return 0;
+                }).then(
+                  CommandManager.argument("item", ItemStackArgumentType.itemStack(registryAccess))
+                    .executes(context -> {
+                        ServerCommandSource source = context.getSource();
+
+                        ItemStackArgument itemArgument = ItemStackArgumentType.getItemStackArgument(context, "item");
+
+                        DynamicRegistryManager.Immutable registryManager = source.getServer().getRegistryManager();
+                        ComponentMap components = itemArgument.getItem().getComponents();
+                        LOGGER.info("{}", components);
+
+                        NbtElement nbtElement = ComponentMap.CODEC.encodeStart(registryManager.getOps(NbtOps.INSTANCE), components).getOrThrow();
+
+                        source.sendFeedback(() -> NbtHelper.toPrettyPrintedText(nbtElement), false);
+                        return 0;
+                    })
+                )
+            );
+        });
     }
 
     public static Identifier id(String path) {
