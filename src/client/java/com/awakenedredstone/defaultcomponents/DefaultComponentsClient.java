@@ -11,7 +11,9 @@ public class DefaultComponentsClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         ClientPlayNetworking.registerGlobalReceiver(SyncPayload.ID, (payload, context) -> {
-            ComponentSync.sync(payload);
+            if (!context.client().isInSingleplayer()) {
+                ComponentSync.sync(payload);
+            }
         });
 
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
