@@ -4,12 +4,23 @@ import com.awakenedredstone.defaultcomponents.duck.ModifyDefaultComponents;
 import com.awakenedredstone.defaultcomponents.network.SyncPayload;
 import net.minecraft.item.Item;
 import net.minecraft.registry.Registries;
+import net.minecraft.server.DataPackContents;
 import net.minecraft.util.Identifier;
 
 import java.util.Map;
+/*? if >=1.21.2 {*/
+import net.minecraft.registry.tag.TagGroupLoader;
+import java.util.ArrayList;
+import java.util.List;
+/*?}*/
 
 public class DefaultComponentData {
     public static final DefaultComponentData INSTANCE = new DefaultComponentData();
+
+    /*? if >=1.21.2 {*/
+    public List<TagGroupLoader.RegistryTags<?>> registryTags = new ArrayList<>();
+    /*?}*/
+    public DataPackContents dataPackContents;
 
     Map<String, DefaultComponentLoader.ComponentManipulation> modComponents = Map.of();
     Map<Identifier, DefaultComponentLoader.ComponentManipulation> itemComponents = Map.of();

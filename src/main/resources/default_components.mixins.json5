@@ -4,12 +4,18 @@
   "package": "com.awakenedredstone.defaultcomponents.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "DataPackContentsAccessor",
+    "DataPackContentsMixin",
     "ItemMixin",
     "ItemStackMixin",
     "ItemStackMixin$PacketCodec",
-    "TagEntryAccessor"
+    "TagEntryAccessor",
+    /*? if >=1.21.2 {*/
+    "TagGroupLoaderMixin"
+    /*?}*/
   ],
   "injectors": {
     "defaultRequire": 1
-  }
+  },
+  "refmap": "default-components-refmap.json"
 }

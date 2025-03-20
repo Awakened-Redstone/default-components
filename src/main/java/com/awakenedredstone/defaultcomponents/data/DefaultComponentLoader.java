@@ -3,7 +3,6 @@ package com.awakenedredstone.defaultcomponents.data;
 import com.awakenedredstone.defaultcomponents.mixin.TagEntryAccessor;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
 import com.mojang.datafixers.util.Either;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
@@ -16,17 +15,25 @@ import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.registry.*;
 import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.registry.entry.RegistryEntryList;
 import net.minecraft.registry.tag.TagEntry;
 import net.minecraft.registry.tag.TagKey;
 import net.minecraft.resource.JsonDataLoader;
-import net.minecraft.resource.ResourceFinder;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.InvalidIdentifierException;
 import net.minecraft.util.profiler.Profiler;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+/*? if >=1.21.2 {*/
+import net.minecraft.resource.ResourceFinder;
+import net.minecraft.registry.tag.TagGroupLoader;
+/*?} else {*/
+/*import com.google.gson.JsonElement;
+import net.minecraft.registry.tag.TagManagerLoader;
+import com.awakenedredstone.defaultcomponents.mixin.DataPackContentsAccessor;
+*//*?}*/
 
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -75,11 +82,49 @@ public class DefaultComponentLoader extends /*? if >=1.21.2 {*/JsonDataLoader<De
     *///?}
 
     protected void compute(Map<Identifier, ComponentManipulation> prepared, ResourceManager manager, Profiler profiler) {
+        profiler.push("Default Components data loading");
         final Map<Identifier, ComponentManipulation> perItem = HashMap.newHashMap(0);
         final Map<String, ComponentManipulation> global = HashMap.newHashMap(0);
         final List<Identifier> tags = new ArrayList<>(0);
 
-        prepared.forEach((identifier, componentMap) -> {
+        profiler.push("Default Components data loading (tag gathering)");
+        /*? if <=1.21.1 {*/
+        /*var perhapsTagMap = ((DataPackContentsAccessor) DefaultComponentData.INSTANCE.dataPackContents)
+          .getRegistryTagManager().getRegistryTags().stream()
+          .filter(registryTags -> registryTags.key().equals(RegistryKeys.ITEM))
+          .map(TagManagerLoader.RegistryTags::tags).findFirst();
+
+        if (perhapsTagMap.isEmpty()) {
+            throw new IllegalStateException("Failed to get tag data, unable modify components for the tag items");
+        }
+
+        //noinspection unchecked,rawtypes
+        Map<Identifier, Collection<RegistryEntry<Item>>> tagMap = (Map) perhapsTagMap.get();
+        *//*?} else {*/
+        var perhapsTagMap = DefaultComponentData.INSTANCE.registryTags.stream()
+          .filter(registryTags -> registryTags.key().equals(RegistryKeys.ITEM))
+          .map(TagGroupLoader.RegistryTags::tags).findFirst();
+
+        if (perhapsTagMap.isEmpty()) {
+            throw new IllegalStateException("Failed to get tag data, unable modify components for the tag items");
+        }
+
+        //noinspection unchecked,rawtypes
+        Map<TagKey<?>, Collection<RegistryEntry<Item>>> tagMap = (Map) perhapsTagMap.get();
+        /*?}*/
+        profiler.pop();
+
+        profiler.push("Default Components data loading (entry sorting)");
+        List<Map.Entry<Identifier, ComponentManipulation>> entries = new ArrayList<>(prepared.entrySet());
+        entries.sort(Map.Entry.comparingByKey());
+        entries.sort(Map.Entry.comparingByValue());
+        profiler.pop();
+
+        profiler.push("Default Components data loading (map building)");
+        for (Map.Entry<Identifier, ComponentManipulation> change : entries) {
+            Identifier identifier = change.getKey();
+            ComponentManipulation componentMap = change.getValue();
+
             if (componentMap.target().isPresent()) {
                 Either<WildcardEntry, TagEntry> entryEither = componentMap.target().get();
                 entryEither.map(wildcardEntry -> {
@@ -88,7 +133,7 @@ public class DefaultComponentLoader extends /*? if >=1.21.2 {*/JsonDataLoader<De
                         throw new UnsupportedOperationException("Tried to register wildcard component override " + wildcardEntry.getWildcard() + " twice!");
                     }
 
-                    global.put(id, componentMap);
+                    global.compute(id, (ignored, componentManipulation) -> componentMap.merge(componentManipulation));
 
                     return null;
                 }, tagEntry -> {
@@ -100,41 +145,56 @@ public class DefaultComponentLoader extends /*? if >=1.21.2 {*/JsonDataLoader<De
                             throw new UnsupportedOperationException("Tried to register tag component override " + tagKey.id() + " twice!");
                         }
 
+                        profiler.push("Default Components data loading (going trough tag items)");
                         /*? if >=1.21.2 {*/
-                        Optional<RegistryEntryList.Named<Item>> optional = Registries.ITEM.getOptional(tagKey);
+                        Optional<Collection<RegistryEntry<Item>>> optional = Optional.ofNullable(tagMap.get(tagKey));
                         /*?} else {*/
-                        /*Optional<RegistryEntryList.Named<Item>> optional = Optional.of(Registries.ITEM.getOrCreateEntryList(tagKey));
-                        *//*?}*/
+                        /*Optional<Collection<RegistryEntry<Item>>> optional = Optional.ofNullable(tagMap.get(tagKey.id()));
+                         *//*?}*/
                         if (optional.isPresent()) {
                             for (RegistryEntry<Item> entry : optional.get()) {
                                 Optional<RegistryKey<Item>> entryKey = entry.getKey();
                                 entryKey.ifPresent(itemRegistryKey -> {
-                                    perItem.put(itemRegistryKey.getValue(), componentMap);
+                                    perItem.compute(itemRegistryKey.getValue(), (ignored, componentManipulation) -> componentMap.merge(componentManipulation));
                                     tags.add(tagKey.id());
                                 });
                             }
+                        } else {
+                            LOGGER.warn("Failed to find tag {}, skipping", tagKey.id());
                         }
+                        profiler.pop();
                     } else {
-                        perItem.put(tagKey.id(), componentMap);
+                        perItem.compute(tagKey.id(), (ignored, componentManipulation) -> componentMap.merge(componentManipulation));
                     }
 
                     return null;
                 });
             } else {
                 if (Registries.ITEM.containsId(identifier)) {
-                    perItem.put(identifier, componentMap);
+                    perItem.compute(identifier, (ignored, componentManipulation) -> componentMap.merge(componentManipulation));
                 } else {
                     LOGGER.warn("Skipping invalid item {}", identifier);
                 }
             }
-        });
+        }
+        profiler.pop();
+
+        // I don't need this anymore, and I don't want to keep it in memory doing nothing
+        /*? if >=1.21.2 {*/
+        DefaultComponentData.INSTANCE.registryTags.clear();
+         /*?} else {*/
+        /*DefaultComponentData.INSTANCE.dataPackContents = null;
+        *//*?}*/
 
         DefaultComponentData.INSTANCE.itemComponents = Map.copyOf(perItem);
         DefaultComponentData.INSTANCE.modComponents = Map.copyOf(global);
+        profiler.push("Default Components data loading (applying)");
         DefaultComponentData.INSTANCE.modifyItems();
+        profiler.pop();
+        profiler.pop();
     }
 
-    public record ComponentManipulation(Optional<Either<WildcardEntry, TagEntry>> target, Optional<Map<ComponentType<?>, Object>> additions, Optional<List<ComponentType<?>>> removals) {
+    public record ComponentManipulation(Optional<Either<WildcardEntry, TagEntry>> target, Optional<Map<ComponentType<?>, Object>> additions, Optional<List<ComponentType<?>>> removals) implements Comparable<ComponentManipulation> {
         public static final ComponentManipulation EMPTY = new ComponentManipulation(Optional.empty(), Optional.empty(), Optional.empty());
         public static final Codec<ComponentType<?>> COMPONENT_CODEC = Codec.STRING
           .flatXmap(
@@ -216,6 +276,7 @@ public class DefaultComponentLoader extends /*? if >=1.21.2 {*/JsonDataLoader<De
             }
 
             private static <T> void encodeComponent(RegistryByteBuf buf, ComponentType<T> type, Object value) {
+                //noinspection unchecked
                 type.getPacketCodec().encode(buf, (T) value);
             }
         };
@@ -236,6 +297,35 @@ public class DefaultComponentLoader extends /*? if >=1.21.2 {*/JsonDataLoader<De
             if (removals().isPresent()) {
                 removals().get().forEach((componentType) -> action.accept((C) componentType));
             }
+        }
+
+        public ComponentManipulation merge(@Nullable ComponentManipulation other) {
+            if (other == null) return this;
+
+            final Map<ComponentType<?>, Object> newAdditions = other.additions().map(HashMap::new).orElse(HashMap.newHashMap(0));
+            final List<ComponentType<?>> newRemovals = other.removals().map(ArrayList::new).orElse(new ArrayList<>());
+
+            additions.ifPresent(newAdditions::putAll);
+            removals.ifPresent(newRemovals::addAll);
+
+            return new ComponentManipulation(Optional.empty(), Optional.of(Map.copyOf(newAdditions)), Optional.of(List.copyOf(newRemovals)));
+        }
+
+        @Override
+        public int compareTo(@NotNull ComponentManipulation o) {
+            if (this.target().isEmpty() && o.target().isPresent()) return 1;
+            if (this.target().isPresent() && o.target().isEmpty()) return -1;
+
+            if (this.target().isPresent()) {
+                if (target().get().left().isPresent() && o.target().get().right().isPresent()) {
+                    return -1;
+                }
+                if (target().get().right().isPresent() && o.target().get().left().isPresent()) {
+                    return 1;
+                }
+            }
+
+            return 0;
         }
     }
 

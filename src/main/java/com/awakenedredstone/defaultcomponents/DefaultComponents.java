@@ -43,11 +43,7 @@ public class DefaultComponents implements ModInitializer {
         ResourceManagerHelper resourceManagerHelper = ResourceManagerHelper.get(ResourceType.SERVER_DATA);
         resourceManagerHelper.registerReloadListener(id("default_components"), DefaultComponentLoader::new);
 
-        ServerLifecycleEvents.START_DATA_PACK_RELOAD.register((server, resourceManager) -> {
-        });
-
         ServerLifecycleEvents.END_DATA_PACK_RELOAD.register((server, resourceManager, success) -> {
-
             if (success) {
                 try {
                     for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
