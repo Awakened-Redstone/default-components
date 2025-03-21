@@ -77,17 +77,21 @@ public class DefaultComponentLoader extends /*? if >=1.21.2 {*/JsonDataLoader<De
             newPrepared.put(identifier, component);
         });
 
+        profiler.startTick();
+        profiler.push("default_components");
         compute(newPrepared, manager, profiler);
+        profiler.pop();
+        profiler.endTick();
     }
     *///?}
 
     protected void compute(Map<Identifier, ComponentManipulation> prepared, ResourceManager manager, Profiler profiler) {
-        profiler.push("Default Components data loading");
+        profiler.push("data compute");
         final Map<Identifier, ComponentManipulation> perItem = HashMap.newHashMap(0);
         final Map<String, ComponentManipulation> global = HashMap.newHashMap(0);
         final List<Identifier> tags = new ArrayList<>(0);
 
-        profiler.push("Default Components data loading (tag gathering)");
+        profiler.push("tag gathering");
         /*? if <=1.21.1 {*/
         /*var perhapsTagMap = ((DataPackContentsAccessor) DefaultComponentData.INSTANCE.dataPackContents)
           .getRegistryTagManager().getRegistryTags().stream()
@@ -114,13 +118,13 @@ public class DefaultComponentLoader extends /*? if >=1.21.2 {*/JsonDataLoader<De
         /*?}*/
         profiler.pop();
 
-        profiler.push("Default Components data loading (entry sorting)");
+        profiler.push("entry sorting");
         List<Map.Entry<Identifier, ComponentManipulation>> entries = new ArrayList<>(prepared.entrySet());
         entries.sort(Map.Entry.comparingByKey());
         entries.sort(Map.Entry.comparingByValue());
         profiler.pop();
 
-        profiler.push("Default Components data loading (map building)");
+        profiler.push("map building");
         for (Map.Entry<Identifier, ComponentManipulation> change : entries) {
             Identifier identifier = change.getKey();
             ComponentManipulation componentMap = change.getValue();
@@ -145,7 +149,7 @@ public class DefaultComponentLoader extends /*? if >=1.21.2 {*/JsonDataLoader<De
                             throw new UnsupportedOperationException("Tried to register tag component override " + tagKey.id() + " twice!");
                         }
 
-                        profiler.push("Default Components data loading (going trough tag items)");
+                        profiler.push("tag items");
                         /*? if >=1.21.2 {*/
                         Optional<Collection<RegistryEntry<Item>>> optional = Optional.ofNullable(tagMap.get(tagKey));
                         /*?} else {*/
@@ -188,7 +192,7 @@ public class DefaultComponentLoader extends /*? if >=1.21.2 {*/JsonDataLoader<De
 
         DefaultComponentData.INSTANCE.itemComponents = Map.copyOf(perItem);
         DefaultComponentData.INSTANCE.modComponents = Map.copyOf(global);
-        profiler.push("Default Components data loading (applying)");
+        profiler.push("applying");
         DefaultComponentData.INSTANCE.modifyItems();
         profiler.pop();
         profiler.pop();
