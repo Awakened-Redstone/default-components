@@ -65,7 +65,11 @@ public class DefaultComponentLoader extends /*? if >=1.21.2 {*/JsonDataLoader<De
     //? if >=1.21.2 {
     @Override
     protected void apply(Map<Identifier, ComponentManipulation> prepared, ResourceManager manager, Profiler profiler) {
+        profiler.startTick();
+        profiler.push("default_components");
         compute(prepared, manager, profiler);
+        profiler.pop();
+        profiler.endTick();
     }
     //?} else {
     /*@Override
