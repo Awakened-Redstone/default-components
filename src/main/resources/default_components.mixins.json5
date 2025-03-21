@@ -11,8 +11,9 @@
     "ItemStackMixin$PacketCodec",
     "TagEntryAccessor",
     /*? if >=1.21.2 {*/
-    "TagGroupLoaderMixin"
+    "TagGroupLoaderMixin",
     /*?}*/
+    "ProfilerSystemMixin"
   ],
   "injectors": {
     "defaultRequire": 1
