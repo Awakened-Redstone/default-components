@@ -1,7 +1,5 @@
 package com.awakenedredstone.defaultcomponents.data;
 
-import com.awakenedredstone.defaultcomponents.DefaultComponents;
-import com.awakenedredstone.defaultcomponents.duck.RebuildDefaultComponents;
 import com.awakenedredstone.defaultcomponents.network.SyncPayload;
 
 import java.util.Map;

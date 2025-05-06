@@ -47,7 +47,9 @@ public class DefaultComponents implements ModInitializer {
             if (success) {
                 try {
                     for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
-                        ServerPlayNetworking.send(player, DefaultComponentData.createSyncPayload());
+                        if (!server.isHost(player.getGameProfile())) {
+                            ServerPlayNetworking.send(player, DefaultComponentData.createSyncPayload());
+                        }
                     }
                 } catch (Exception e) {
                     LOGGER.error("Failed to update default components", e);
@@ -58,7 +60,11 @@ public class DefaultComponents implements ModInitializer {
         PayloadTypeRegistry.playS2C().register(SyncPayload.ID, SyncPayload.PACKET_CODEC);
         PayloadTypeRegistry.playC2S().register(DefaultComponentsPresentPayload.ID, DefaultComponentsPresentPayload.PACKET_CODEC);
 
-        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> sender.sendPacket(DefaultComponentData.createSyncPayload()));
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+            if (!server.isHost(handler.getPlayer().getGameProfile())) {
+                sender.sendPacket(DefaultComponentData.createSyncPayload());
+            }
+        });
 
         ServerPlayNetworking.registerGlobalReceiver(DefaultComponentsPresentPayload.ID, (payload, context) -> {
             MODDED_PLAYERS.add(context.player().getGameProfile());
