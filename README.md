@@ -10,7 +10,7 @@
   - **modpacks**, the client support provides extended mod support, like showing on [REI](https://modrinth.com/mod/rei)
   - **server-side** modding with the vanilla compatibility
 
-[![You can find a detailed documentation here](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/documentation/generic_vector.svg)](https://docs.awakenedredstone.com/minecraft/default_components/introduction/)
+[![You can find a detailed documentation here](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/documentation/generic_vector.svg)](https://docs.awakenedredstone.com/minecraft/default-components/)
 
 ---
 
