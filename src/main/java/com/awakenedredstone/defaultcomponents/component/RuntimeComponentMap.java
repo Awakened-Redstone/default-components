@@ -3,7 +3,6 @@ package com.awakenedredstone.defaultcomponents.component;
 import net.minecraft.component.Component;
 import net.minecraft.component.ComponentMap;
 import net.minecraft.component.ComponentType;
-import net.minecraft.item.Item;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -47,10 +46,12 @@ public class RuntimeComponentMap implements ComponentMap {
         return map.getOrDefault(type, fallback);
     }
 
-    @Override
+    //? if <1.21.5 {
+    /*@Override
     public @Nullable <T> Component<T> copy(ComponentType<T> type) {
         return map.copy(type);
     }
+    *///?}
 
     @Override
     public @NotNull Iterator<Component<?>> iterator() {

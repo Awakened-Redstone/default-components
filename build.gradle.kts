@@ -2,9 +2,9 @@ import groovy.json.JsonSlurper
 import me.modmuss50.mpp.ReleaseType
 
 plugins {
-    id("fabric-loom") version "1.9+"
+    id("fabric-loom") version "1.11+"
     id("me.modmuss50.mod-publish-plugin") version "0.8.4"
-    id("dev.kikugie.j52j") version "2.+"
+    //id("dev.kikugie.j52j") version "2.+"
 }
 
 val minecraftVersion: String = stonecutter.current.version
@@ -71,24 +71,25 @@ dependencies {
     //include(api("blue.endless:jankson:${property("jankson_version")}")!!)
 }
 
-j52j {
-    /* Overrides sources processed by the plugin.
+/*j52j {
+    *//* Overrides sources processed by the plugin.
     By default, it dynamically adds all registered sources,
-    so this is not required unless you want some sources to not be processed.*/
+    so this is not required unless you want some sources to not be processed.*//*
     //sources(sourceSets["main"])
 
     params {
-        /* Enables indentation in the processed JSON files.
-        Due to limitations of Gson, the indent can only be two spaces.*/
+        *//* Enables indentation in the processed JSON files.
+        Due to limitations of Gson, the indent can only be two spaces.*//*
         prettyPrinting = true // default: false
     }
-}
+}*/
 
 tasks.processResources {
     val versions = JsonSlurper().parse(file("versions/versions.json")) as Map<*, *>
     val map = mapOf(
             "version" to version,
             "accessWidener" to "default_components.${minecraftVersion}.accesswidener",
+            "mixin" to "default_components.mixins.${minecraftVersion}.json",
             "minecraft" to versions[minecraftVersion]
     )
 
@@ -102,6 +103,7 @@ tasks.processResources {
         val version: String = it.version
         if (version != minecraftVersion) {
             exclude("**/default_components.${version}.accesswidener")
+            exclude("**/default_components.mixins.${version}.json")
         }
     }
 }

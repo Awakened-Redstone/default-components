@@ -23,7 +23,7 @@
 
   "accessWidener": "${accessWidener}",
   "mixins": [
-    "default_components.mixins.json"
+    "${mixin}"
   ],
 
   "depends": {
