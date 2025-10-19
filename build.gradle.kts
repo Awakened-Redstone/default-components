@@ -1,18 +1,20 @@
+import dev.kikugie.semver.data.Version
 import groovy.json.JsonSlurper
 import me.modmuss50.mpp.ReleaseType
+import kotlin.text.first
 
 plugins {
     id("fabric-loom") version "1.11+"
     id("me.modmuss50.mod-publish-plugin") version "0.8.4"
-    //id("dev.kikugie.j52j") version "2.+"
+    id("dev.kikugie.fletching-table.fabric") version "0.1+"
 }
 
 val minecraftVersion: String = stonecutter.current.version
 val latestVersion: String = stonecutter.versions.last().version
 
 @Suppress("UNCHECKED_CAST")
-val modVersions: Map<String, List<String>> = JsonSlurper().parse(file("versions/modrinth.json")) as Map<String, List<String>>
-val modVersion: String = property("mod_version").toString()
+val modVersions: Map<String, List<String>> =
+    JsonSlurper().parse(file("versions/modrinth.json")) as Map<String, List<String>>
 
 var archivesBaseName: String = property("archives_base_name").toString()
 version = "${property("mod_version")}+$minecraftVersion"
@@ -23,13 +25,59 @@ fun file(path: String): File {
     return rootProject.file(path)
 }
 
+@Override
+fun fileTree(path: String): ConfigurableFileTree {
+    return rootProject.fileTree(path)
+}
+
 base {
     archivesName.set(property("archives_base_name").toString())
 }
 
+val accessWidener = findAccessWidener()
+
+fun findAccessWidenerFile(): File {
+    return file("src/main/resources/accesswideners/${accessWidener.second}")
+}
+
+fun findAccessWidener(): Pair<String, String> {
+    val wideners = fileTree("src/main/resources/accesswideners")
+    val versions: MutableSet<Version> = sortedSetOf();
+    val sampleFileName = wideners.first().name
+    val filePrefix = sampleFileName.substringBefore('.')
+    val fileSuffix = sampleFileName.substringAfterLast('.')
+
+    wideners.visit {
+        val version = file.name.substringAfter('.').substringBeforeLast('.')
+        versions += sc.parse(version)
+    }
+
+    var returnValue: Pair<String, String>? = null;
+    for (version in versions.reversed()) {
+        if (sc.eval(minecraftVersion, ">=${version.value}")) {
+            returnValue = Pair(version.value, "$filePrefix.${version.value}.$fileSuffix")
+            break
+        }
+    }
+
+    if (returnValue == null) {
+        throw MissingResourceException("No valid access widener for $minecraftVersion found!")
+    }
+
+    logger.info("Excluding for $minecraftVersion")
+    for (version in versions) {
+        if (version.value != returnValue.first) {
+            logger.info("Excluding: ${version.value}")
+            tasks.processResources.get().exclude("**/$filePrefix.${version.value}.$fileSuffix")
+        }
+    }
+
+    return returnValue
+}
+
 loom {
     splitEnvironmentSourceSets()
-    accessWidenerPath = file("src/main/resources/default_components.${stonecutter.current.version}.accesswidener")
+    accessWidenerPath = findAccessWidenerFile()
 
     runConfigs.all {
         ideConfigGenerated(true)
@@ -42,13 +90,38 @@ loom {
 
     runConfigs["client"].apply {
         vmArgs("-Dmixin.debug.export=true")
-        programArgs("--quickPlaySingleplayer \"New World (1)\"", "--uuid 2e7c2349-94ec-4862-8b68-344d049840d2 --username AwakenedRedstone")
+        programArgs(
+            "--quickPlaySingleplayer \"New World (1)\"",
+            "--uuid 2e7c2349-94ec-4862-8b68-344d049840d2 --username AwakenedRedstone"
+        )
     }
 
     mods {
         register("default_components") {
             sourceSet(sourceSets.main.get())
         }
+    }
+}
+
+stonecutter {
+    fun registerMacro(name: String, predicate: String, then: String, `else`: String) {
+        swaps[name] = when {
+            eval(current.version, predicate) -> then
+            else -> `else`
+        }
+    }
+
+    registerMacro(
+        "WhitelistProfile",
+        ">=1.21.9",
+        "net.minecraft.server.PlayerConfigEntry",
+        "com.mojang.authlib.GameProfile"
+    )
+}
+
+fletchingTable {
+    j52j.register("main") {
+        extension("json", "default_components.mixins.json5")
     }
 }
 
@@ -71,40 +144,18 @@ dependencies {
     //include(api("blue.endless:jankson:${property("jankson_version")}")!!)
 }
 
-/*j52j {
-    *//* Overrides sources processed by the plugin.
-    By default, it dynamically adds all registered sources,
-    so this is not required unless you want some sources to not be processed.*//*
-    //sources(sourceSets["main"])
-
-    params {
-        *//* Enables indentation in the processed JSON files.
-        Due to limitations of Gson, the indent can only be two spaces.*//*
-        prettyPrinting = true // default: false
-    }
-}*/
-
 tasks.processResources {
     val versions = JsonSlurper().parse(file("versions/versions.json")) as Map<*, *>
     val map = mapOf(
-            "version" to version,
-            "accessWidener" to "default_components.${minecraftVersion}.accesswidener",
-            "mixin" to "default_components.mixins.${minecraftVersion}.json",
-            "minecraft" to versions[minecraftVersion]
+        "version" to version,
+        "minecraft" to versions[minecraftVersion],
+        "accesswidener" to accessWidener.second
     )
 
     inputs.properties(map)
 
     filesMatching("fabric.mod.json") {
         expand(map)
-    }
-
-    stonecutter.versions.forEach {
-        val version: String = it.version
-        if (version != minecraftVersion) {
-            exclude("**/default_components.${version}.accesswidener")
-            exclude("**/default_components.mixins.${version}.json")
-        }
     }
 }
 
@@ -157,7 +208,7 @@ if (projectVersion.contains("beta")) {
     projectVersionType = ReleaseType.BETA
 }
 
-fun <T> action(action: Action<T>) : Action<T> where T : Task {
+fun <T> action(action: Action<T>): Action<T> where T : Task {
     return action
 }
 

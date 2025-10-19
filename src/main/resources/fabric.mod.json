@@ -21,9 +21,9 @@
     ]
   },
 
-  "accessWidener": "${accessWidener}",
+  "accessWidener": "accesswideners/${accesswidener}",
   "mixins": [
-    "${mixin}"
+    "default_components.mixins.json"
   ],
 
   "depends": {

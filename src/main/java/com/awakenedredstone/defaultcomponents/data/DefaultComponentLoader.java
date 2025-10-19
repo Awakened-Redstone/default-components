@@ -29,8 +29,8 @@ import org.slf4j.LoggerFactory;
 /*? if >=1.21.2 {*/
 import net.minecraft.resource.ResourceFinder;
 import net.minecraft.registry.tag.TagGroupLoader;
-/*?} else {*/
-/*import com.google.gson.JsonElement;
+/*?} else {*//*
+import com.google.gson.JsonElement;
 import net.minecraft.registry.tag.TagManagerLoader;
 import com.awakenedredstone.defaultcomponents.mixin.DataPackContentsAccessor;
 *//*?}*/
@@ -42,17 +42,17 @@ import java.util.function.Consumer;
 public class DefaultComponentLoader extends /*? if >=1.21.2 {*/JsonDataLoader<DefaultComponentLoader.ComponentManipulation>/*?} else {*//*JsonDataLoader*//*?}*/ implements IdentifiableResourceReloadListener {
     public static final Logger LOGGER = LoggerFactory.getLogger("Default Components Data Parser");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
-    /*? if <1.21.2 {*/
-    /*private final RegistryOps<JsonElement> ops;
+    /*? if <1.21.2 {*//*
+    private final RegistryOps<JsonElement> ops;
     *//*?}*/
 
     public DefaultComponentLoader(RegistryWrapper.WrapperLookup registryWrapper) {
         /*? if >=1.21.4 {*/
         super(registryWrapper.getOps(JsonOps.INSTANCE), ComponentManipulation.CODEC, ResourceFinder.json("default_components"));
-        /*?} else if >=1.21.2 {*/
-        /*super(registryWrapper.getOps(JsonOps.INSTANCE), ComponentManipulation.CODEC, "default_components");
-        *//*?} else {*/
-        /*super(GSON, "default_components");
+        /*?} else if >=1.21.2 {*//*
+        super(registryWrapper.getOps(JsonOps.INSTANCE), ComponentManipulation.CODEC, "default_components");
+        *//*?} else {*//*
+        super(GSON, "default_components");
         this.ops = registryWrapper.getOps(JsonOps.INSTANCE);
         *//*?}*/
     }
@@ -96,8 +96,8 @@ public class DefaultComponentLoader extends /*? if >=1.21.2 {*/JsonDataLoader<De
         final List<Identifier> tags = new ArrayList<>(0);
 
         profiler.push("tag gathering");
-        /*? if <=1.21.1 {*/
-        /*var perhapsTagMap = ((DataPackContentsAccessor) DefaultComponentData.INSTANCE.dataPackContents)
+        /*? if <=1.21.1 {*//*
+        var perhapsTagMap = ((DataPackContentsAccessor) DefaultComponentData.INSTANCE.dataPackContents)
           .getRegistryTagManager().getRegistryTags().stream()
           .filter(registryTags -> registryTags.key().equals(RegistryKeys.ITEM))
           .map(TagManagerLoader.RegistryTags::tags).findFirst();
@@ -156,8 +156,8 @@ public class DefaultComponentLoader extends /*? if >=1.21.2 {*/JsonDataLoader<De
                         profiler.push("tag items");
                         /*? if >=1.21.2 {*/
                         Optional<Collection<RegistryEntry<Item>>> optional = Optional.ofNullable(tagMap.get(tagKey));
-                        /*?} else {*/
-                        /*Optional<Collection<RegistryEntry<Item>>> optional = Optional.ofNullable(tagMap.get(tagKey.id()));
+                        /*?} else {*//*
+                        Optional<Collection<RegistryEntry<Item>>> optional = Optional.ofNullable(tagMap.get(tagKey.id()));
                          *//*?}*/
                         if (optional.isPresent()) {
                             for (RegistryEntry<Item> entry : optional.get()) {
@@ -190,8 +190,8 @@ public class DefaultComponentLoader extends /*? if >=1.21.2 {*/JsonDataLoader<De
         // I don't need this anymore, and I don't want to keep it in memory doing nothing
         /*? if >=1.21.2 {*/
         DefaultComponentData.INSTANCE.registryTags.clear();
-         /*?} else {*/
-        /*DefaultComponentData.INSTANCE.dataPackContents = null;
+         /*?} else {*//*
+        DefaultComponentData.INSTANCE.dataPackContents = null;
         *//*?}*/
 
         DefaultComponentData.INSTANCE.itemComponents = Map.copyOf(perItem);

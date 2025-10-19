@@ -5,6 +5,7 @@ import com.awakenedredstone.defaultcomponents.data.DefaultComponentLoader;
 import com.awakenedredstone.defaultcomponents.network.DefaultComponentsPresentPayload;
 import com.awakenedredstone.defaultcomponents.network.SyncPayload;
 import com.awakenedredstone.defaultcomponents.util.ConcurrentWeakSet;
+import com.awakenedredstone.defaultcomponents.util.Stonecutter;
 import com.mojang.authlib.GameProfile;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
@@ -47,7 +48,7 @@ public class DefaultComponents implements ModInitializer {
             if (success) {
                 try {
                     for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
-                        if (!server.isHost(player.getGameProfile())) {
+                        if (!server.isHost(Stonecutter.toPlayerProfile(player.getGameProfile()))) {
                             ServerPlayNetworking.send(player, DefaultComponentData.createSyncPayload());
                         }
                     }
@@ -61,7 +62,7 @@ public class DefaultComponents implements ModInitializer {
         PayloadTypeRegistry.playC2S().register(DefaultComponentsPresentPayload.ID, DefaultComponentsPresentPayload.PACKET_CODEC);
 
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
-            if (!server.isHost(handler.getPlayer().getGameProfile())) {
+            if (!server.isHost(Stonecutter.toPlayerProfile(handler.getPlayer().getGameProfile()))) {
                 sender.sendPacket(DefaultComponentData.createSyncPayload());
             }
         });

@@ -21,8 +21,8 @@ public abstract class ItemStackMixin implements RebuildDefaultComponents {
     private static class PacketCodec {
         //? if >=1.21.2 {
         @ModifyExpressionValue(method = "encode(Lnet/minecraft/network/RegistryByteBuf;Lnet/minecraft/item/ItemStack;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/component/MergedComponentMap;getChanges()Lnet/minecraft/component/ComponentChanges;"))
-        /*?} else {*/
-        /*@ModifyExpressionValue(method = "encode(Lnet/minecraft/network/RegistryByteBuf;Lnet/minecraft/item/ItemStack;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/component/ComponentMapImpl;getChanges()Lnet/minecraft/component/ComponentChanges;"))
+        /*?} else {*//*
+        @ModifyExpressionValue(method = "encode(Lnet/minecraft/network/RegistryByteBuf;Lnet/minecraft/item/ItemStack;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/component/ComponentMapImpl;getChanges()Lnet/minecraft/component/ComponentChanges;"))
         *//*?}*/
         private ComponentChanges informVanilla(ComponentChanges original, @Local(argsOnly = true) ItemStack stack) {
             PacketContext context = PacketContext.get();

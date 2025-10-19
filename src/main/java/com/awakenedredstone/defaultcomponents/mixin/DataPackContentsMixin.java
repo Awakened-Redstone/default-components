@@ -15,7 +15,7 @@ public class DataPackContentsMixin {
         DefaultComponentData.INSTANCE.dataPackContents = (DataPackContents) (Object) this;
     }
 
-    @ModifyExpressionValue(method = "method_58296", at = @At(value = "INVOKE", target = "Lorg/slf4j/Logger;isDebugEnabled()Z"))
+    @ModifyExpressionValue(method = "method_58296", at = @At(value = "INVOKE", target = "Lorg/slf4j/Logger;isDebugEnabled()Z", remap = false))
     private static boolean enableDebug(boolean original) {
         return original || Boolean.getBoolean("defaultcomponents.debug.reload");
     }
